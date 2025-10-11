@@ -28,6 +28,26 @@ TEST_CASE("vm version")
   CHECK(v4_vm_version() == 0);
 }
 
+// Arthmetic and stack operation tests
+TEST_CASE("basic stack ops (LIT/SWAP/DUP/OVER/DROP/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 1, 0, 0, 0,
+      (uint8_t)Op::LIT, 2, 0, 0, 0,
+      (uint8_t)Op::SWAP,
+      (uint8_t)Op::DUP,
+      (uint8_t)Op::OVER,
+      (uint8_t)Op::DROP,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 3);
+  CHECK(vm.DS[0] == 2);
+  CHECK(vm.DS[1] == 1);
+}
+
 TEST_CASE("basic arithmetic (LIT/ADD/RET)")
 {
   Vm vm;
@@ -117,6 +137,7 @@ TEST_CASE("error: division by zero")
   CHECK(vm.sp == vm.DS + 0);
 }
 
+// Comparison
 TEST_CASE("equality (LIT/EQ/RET)")
 {
   Vm vm;
@@ -207,25 +228,67 @@ TEST_CASE("comparison (LIT/LE/RET)")
   CHECK(vm.DS[0] == V4_TRUE);
 }
 
-TEST_CASE("basic stack ops (LIT/SWAP/DUP/OVER/DROP/RET)")
+// Bitwise
+TEST_CASE("bitwise AND (LIT/AND/RET)")
 {
   Vm vm;
   vm_reset(vm);
   uint8_t code[] = {
-      (uint8_t)Op::LIT, 1, 0, 0, 0,
-      (uint8_t)Op::LIT, 2, 0, 0, 0,
-      (uint8_t)Op::SWAP,
-      (uint8_t)Op::DUP,
-      (uint8_t)Op::OVER,
-      (uint8_t)Op::DROP,
+      (uint8_t)Op::LIT, 0b1100, 0, 0, 0,
+      (uint8_t)Op::LIT, 0b1010, 0, 0, 0,
+      (uint8_t)Op::AND,
       (uint8_t)Op::RET};
   int rc = vm_exec(vm, code, sizeof(code));
   CHECK(rc == 0);
-  CHECK(vm.sp == vm.DS + 3);
-  CHECK(vm.DS[0] == 2);
-  CHECK(vm.DS[1] == 1);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 0b1000);
 }
 
+TEST_CASE("bitwise OR (LIT/OR/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 0b1100, 0, 0, 0,
+      (uint8_t)Op::LIT, 0b1010, 0, 0, 0,
+      (uint8_t)Op::OR,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 0b1110);
+}
+
+TEST_CASE("bitwise INVERT (LIT/INVERT/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 0b1100, 0, 0, 0,
+      (uint8_t)Op::INVERT,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == ~0b1100);
+}
+
+TEST_CASE("bitwise XOR (LIT/XOR/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 0b1100, 0, 0, 0,
+      (uint8_t)Op::LIT, 0b1010, 0, 0, 0,
+      (uint8_t)Op::XOR,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 0b0110);
+}
+
+// Control flow tests
 TEST_CASE("unconditional branch (JMP)")
 {
   Vm vm;

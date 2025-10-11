@@ -64,6 +64,7 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
     Op op = static_cast<Op>(*ip++);
     switch (op)
     {
+    // Literal
     case Op::LIT:
     {
       if (ip + 4 > ip_end)
@@ -74,6 +75,7 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
     }
     break;
 
+    // Stack manipulation
     case Op::DUP:
     {
       int32_t a = ds_peek(vm, 0);
@@ -103,6 +105,7 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
     }
     break;
 
+    // Arithmetic
     case Op::ADD:
     {
       int32_t a = ds_pop(vm);
@@ -147,6 +150,7 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
       break;
     }
 
+    // Comparison
     case Op::EQ:
     {
       int32_t b = ds_pop(vm), a = ds_pop(vm);
@@ -184,6 +188,34 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
       break;
     }
 
+    // Bitwise
+    case Op::AND:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a & b);
+      break;
+    }
+    case Op::OR:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a | b);
+      break;
+    }
+    case Op::XOR:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a ^ b);
+      break;
+    }
+    // optional
+    case Op::INVERT:
+    {
+      int32_t a = ds_pop(vm);
+      ds_push(vm, ~a);
+      break;
+    }
+
+    // Control flow
     case Op::JMP:
     {
       if (ip + 2 > ip_end)
@@ -231,6 +263,7 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
     }
     break;
 
+    // Return
     case Op::RET:
       return static_cast<int>(Err::OK);
 

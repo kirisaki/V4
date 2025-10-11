@@ -24,6 +24,7 @@ OP(GE  , 0x25)
 OP(AND , 0x28)
 OP(OR  , 0x29)
 OP(XOR , 0x2A)
+OP(INVERT, 0x2B)
 
 // Control flow
 OP(JMP , 0x40)
