@@ -8,6 +8,7 @@
 #include "v4/opcodes.hpp"
 #include "v4/errors.hpp"
 #include "v4/internal/vm.h"
+#include "v4/internal/memory.hpp"
 
 extern "C" int v4_vm_version(void)
 {
@@ -257,6 +258,26 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
           return static_cast<v4_err>(Err::JumpOutOfRange);
         ip = tgt;
       }
+      break;
+    }
+
+    /* -------- Memory (32-bit, little-endian) -------- */
+    case Op::LOAD: /* ( addr -- x ) */
+    {
+      v4_u32 addr = (v4_u32)ds_pop(vm);
+      v4_u32 val = 0;
+      if (v4_err e = v4_mem_read32_core(vm, addr, &val))
+        return e;
+      ds_push(vm, (int32_t)val);
+      break;
+    }
+
+    case Op::STORE: /* ( x addr -- ) */
+    {
+      v4_u32 addr = (v4_u32)ds_pop(vm); // top = addr
+      v4_u32 val = (v4_u32)ds_pop(vm);  // next = x
+      if (v4_err e = v4_mem_write32_core(vm, addr, val))
+        return e;
       break;
     }
 

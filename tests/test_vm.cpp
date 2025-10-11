@@ -398,3 +398,101 @@ TEST_CASE("Simple loop with JNZ")
   CHECK(vm.DS[0] == 0);      // final value expected to be 0
   CHECK(vm.sp == vm.DS + 1); // single value remains
 }
+
+/* ------------------------------------------------------------------------- */
+/* Memory operations (LOAD/STORE)                                            */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("LOAD/STORE roundtrip 32-bit")
+{
+  alignas(4) uint8_t ram[64] = {};
+  VmConfig cfg{};
+  cfg.mem = ram;
+  cfg.mem_size = sizeof(ram);
+
+  Vm *vm = vm_create(&cfg);
+  vm_reset(vm);
+
+  // bc: LIT 0x12345678; LIT 0x10; STORE; LIT 0x10; LOAD; RET
+  uint8_t bc[64];
+  int k = 0;
+  emit8(bc, &k, (uint8_t)Op::LIT);
+  emit32(bc, &k, 0x12345678);
+  emit8(bc, &k, (uint8_t)Op::LIT);
+  emit32(bc, &k, 0x10);
+  emit8(bc, &k, (uint8_t)Op::STORE);
+  emit8(bc, &k, (uint8_t)Op::LIT);
+  emit32(bc, &k, 0x10);
+  emit8(bc, &k, (uint8_t)Op::LOAD);
+  emit8(bc, &k, (uint8_t)Op::RET);
+
+  REQUIRE(vm_exec_raw(vm, bc, k) == (v4_err)Err::OK);
+
+  CHECK(vm->sp > vm->DS);
+  CHECK(*(vm->sp - 1) == 0x12345678);
+
+  vm_destroy(vm);
+}
+
+TEST_CASE("LOAD/STORE out-of-bounds is rejected")
+{
+  alignas(4) uint8_t ram[16] = {};
+  VmConfig cfg{};
+  cfg.mem = ram;
+  cfg.mem_size = sizeof(ram);
+
+  Vm *vm = vm_create(&cfg);
+  vm_reset(vm);
+
+  const int32_t bad_addr = (int32_t)sizeof(ram) - 3;
+
+  uint8_t bc[64];
+  int k = 0;
+  emit8(bc, &k, (uint8_t)Op::LIT);
+  emit32(bc, &k, 0xDEADBEEF);
+  emit8(bc, &k, (uint8_t)Op::LIT);
+  emit32(bc, &k, bad_addr);
+  emit8(bc, &k, (uint8_t)Op::STORE);
+  emit8(bc, &k, (uint8_t)Op::RET);
+
+  v4_err e = vm_exec_raw(vm, bc, k);
+  CHECK(e != (v4_err)Err::OK);
+
+  vm_destroy(vm);
+}
+
+TEST_CASE("LOAD/STORE unaligned is rejected (addr % 4 != 0)")
+{
+  alignas(4) uint8_t ram[32] = {};
+  VmConfig cfg{};
+  cfg.mem = ram;
+  cfg.mem_size = sizeof(ram);
+
+  Vm *vm = vm_create(&cfg);
+  vm_reset(vm);
+
+  const int32_t unaligned = 0x02;
+
+  uint8_t bc[64];
+  int k = 0;
+  // STORE: LIT 0x01020304; LIT 0x02; STORE; RET
+  emit8(bc, &k, (uint8_t)Op::LIT);
+  emit32(bc, &k, 0x01020304);
+  emit8(bc, &k, (uint8_t)Op::LIT);
+  emit32(bc, &k, unaligned);
+  emit8(bc, &k, (uint8_t)Op::STORE);
+  emit8(bc, &k, (uint8_t)Op::RET);
+
+  v4_err e1 = vm_exec_raw(vm, bc, k);
+  CHECK(e1 != (v4_err)Err::OK);
+
+  k = 0;
+  emit8(bc, &k, (uint8_t)Op::LIT);
+  emit32(bc, &k, unaligned);
+  emit8(bc, &k, (uint8_t)Op::LOAD);
+  emit8(bc, &k, (uint8_t)Op::RET);
+
+  v4_err e2 = vm_exec_raw(vm, bc, k);
+  CHECK(e2 != (v4_err)Err::OK);
+
+  vm_destroy(vm);
+}

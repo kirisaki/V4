@@ -15,3 +15,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - ADD/SUB
 - JMP/JZ/JNZ
 - MUL/DIV/MOD
+- VM memory
+- LOAD/STORE

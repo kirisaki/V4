@@ -26,6 +26,10 @@ OP(OR  , 0x29)
 OP(XOR , 0x2A)
 OP(INVERT, 0x2B)
 
+// Memory access (32-bit, little-endian)
+OP(LOAD , 0x30)
+OP(STORE, 0x31)
+
 // Control flow
 OP(JMP , 0x40)
 OP(JZ  , 0x41)
