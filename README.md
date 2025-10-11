@@ -1,6 +1,6 @@
 # V4 Virtual Machine
 
-A lightweight Forth-compatible bytecode VM written in C++17.
+A lightweight Forth-compatible bytecode VM written.
 
 Licensed under either of
 - [MIT license](./LICENSE-MIT)
