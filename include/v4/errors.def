@@ -1,0 +1,7 @@
+// name, value, message
+ERR(OK,                0,   "ok")
+ERR(TruncatedLiteral, -1,  "literal truncated")
+ERR(TruncatedJump,    -2,  "jump truncated")
+ERR(JumpOutOfRange,   -3,  "jump out of range")
+ERR(FellOffEnd,      -10,  "fell off end")
+ERR(UnknownOp,       -99,  "unknown opcode")

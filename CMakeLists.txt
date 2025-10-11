@@ -25,8 +25,20 @@ option(V4_BUILD_TESTS "Build unit tests" ON)
 
 if (V4_BUILD_TESTS)
   enable_testing()
+
+  # C++ Tests
   add_executable(test_vm tests/test_vm.cpp)
   target_link_libraries(test_vm PRIVATE v4vm)
   target_include_directories(test_vm PRIVATE tests/vendor/doctest)
   add_test(NAME test_vm COMMAND test_vm)
+
+  # C Tests
+  add_executable(test_vm_c tests/test_vm_c.c)
+  target_include_directories(test_vm_c PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(test_vm_c PRIVATE v4vm)
+  if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(test_vm_c PRIVATE -Wall -Wextra -Werror -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion)
+  endif()
+  add_test(NAME test_vm_c COMMAND test_vm_c)
+  
 endif()
