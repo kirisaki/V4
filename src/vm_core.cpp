@@ -147,6 +147,43 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
       break;
     }
 
+    case Op::EQ:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a == b ? V4_TRUE : V4_FALSE);
+      break;
+    }
+    case Op::NE:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a != b ? V4_TRUE : V4_FALSE);
+      break;
+    }
+    case Op::LT:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a < b ? V4_TRUE : V4_FALSE);
+      break;
+    }
+    case Op::LE:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a <= b ? V4_TRUE : V4_FALSE);
+      break;
+    }
+    case Op::GT:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a > b ? V4_TRUE : V4_FALSE);
+      break;
+    }
+    case Op::GE:
+    {
+      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      ds_push(vm, a >= b ? V4_TRUE : V4_FALSE);
+      break;
+    }
+
     case Op::JMP:
     {
       if (ip + 2 > ip_end)

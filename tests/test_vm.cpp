@@ -117,6 +117,96 @@ TEST_CASE("error: division by zero")
   CHECK(vm.sp == vm.DS + 0);
 }
 
+TEST_CASE("equality (LIT/EQ/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::EQ,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == V4_TRUE);
+}
+
+TEST_CASE("comparison (LIT/NE/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::LIT, 20, 0, 0, 0,
+      (uint8_t)Op::NE,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == V4_TRUE);
+}
+
+TEST_CASE("comparison (LIT/GT/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 20, 0, 0, 0,
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::GT,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == V4_TRUE);
+}
+
+TEST_CASE("comparison (LIT/GE/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::GE,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == V4_TRUE);
+}
+
+TEST_CASE("comparison (LIT/LT/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::LIT, 20, 0, 0, 0,
+      (uint8_t)Op::LT,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == V4_TRUE);
+}
+
+TEST_CASE("comparison (LIT/LE/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::LIT, 10, 0, 0, 0,
+      (uint8_t)Op::LE,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == V4_TRUE);
+}
+
 TEST_CASE("basic stack ops (LIT/SWAP/DUP/OVER/DROP/RET)")
 {
   Vm vm;

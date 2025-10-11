@@ -14,4 +14,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - DUP/DROP/SWAP/OVER
 - ADD/SUB
 - JMP/JZ/JNZ
--  MUL/DIV/MOD
+- MUL/DIV/MOD

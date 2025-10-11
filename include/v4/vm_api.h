@@ -6,6 +6,23 @@ extern "C"
 {
 #endif
 
+/**
+ * @def V4_TRUE
+ * @brief Logical true value used by the V4 virtual machine.
+ *
+ * In Forth semantics, *true* is represented by all bits set (−1 as a 32-bit signed integer),
+ * which allows it to be used naturally in bitwise operations such as AND, OR, and INVERT.
+ */
+#define V4_TRUE ((int32_t)-1)
+
+/**
+ * @def V4_FALSE
+ * @brief Logical false value used by the V4 virtual machine.
+ *
+ * In Forth semantics, *false* is represented by zero (0).
+ */
+#define V4_FALSE ((int32_t)0)
+
   /** @file
    *  @brief V4-VM Tier-0 public C API.
    *
