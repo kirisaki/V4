@@ -131,7 +131,7 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
     }
 
     case Op::DIV:
-    { // 入れるなら
+    {
       int32_t b = ds_pop(vm);
       int32_t a = ds_pop(vm);
       if (b == 0)
