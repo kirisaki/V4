@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -6,91 +7,210 @@ extern "C"
 {
 #endif
 
-/**
- * @def V4_TRUE
- * @brief Logical true value used by the V4 virtual machine.
- *
- * In Forth semantics, *true* is represented by all bits set (−1 as a 32-bit signed integer),
- * which allows it to be used naturally in bitwise operations such as AND, OR, and INVERT.
- */
-#define V4_TRUE ((int32_t)-1)
+  /* ------------------------------------------------------------------------- */
+  /* Basic typedefs                                                            */
+  /* ------------------------------------------------------------------------- */
 
-/**
- * @def V4_FALSE
- * @brief Logical false value used by the V4 virtual machine.
- *
- * In Forth semantics, *false* is represented by zero (0).
- */
-#define V4_FALSE ((int32_t)0)
+  /** 32-bit signed integer used internally by the VM. */
+  typedef int32_t v4_i32;
+  /** 32-bit unsigned integer used internally by the VM. */
+  typedef uint32_t v4_u32;
+  /** Error code type. 0 = OK, negative = error. */
+  typedef int v4_err;
 
-  /** @file
-   *  @brief V4-VM Tier-0 public C API.
-   *
-   *  This header exposes a small, stable C ABI for embedding the VM in
-   *  embedded targets and CLI tools. The internal implementation is C++17,
-   *  but the API remains C-compatible.
-   *
-   *  @defgroup v4vm V4-VM Public API
-   *  @{
+  /* ------------------------------------------------------------------------- */
+  /* MMIO (Memory-Mapped I/O)                                                  */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Function pointer type for 32-bit MMIO read callback.
+   * @param user  User-defined context pointer.
+   * @param addr  Absolute address within the MMIO window.
+   * @param out   Output value pointer.
+   * @return 0 on success, negative error code otherwise.
    */
+  typedef v4_err (*v4_mmio_read32_fn)(void *user, v4_u32 addr, v4_u32 *out);
 
-  /** @brief Opaque VM state for Tier-0 interpreter.
-   *
-   *  Layout is currently fixed (Tier-0), but treat it as opaque from user code.
-   *  Future releases may add fields; binary size remains stable when using
-   *  the provided API.
-   *
-   *  @note Data stack (DS) and return stack (RS) have fixed capacities in Tier-0.
+  /**
+   * @brief Function pointer type for 32-bit MMIO write callback.
+   * @param user  User-defined context pointer.
+   * @param addr  Absolute address within the MMIO window.
+   * @param val   Value to write.
+   * @return 0 on success, negative error code otherwise.
    */
-  typedef struct Vm
+  typedef v4_err (*v4_mmio_write32_fn)(void *user, v4_u32 addr, v4_u32 val);
+
+  /**
+   * @brief Descriptor for a single MMIO window.
+   *
+   * Address range is [base, base + size).
+   * Each window may define separate callbacks for read and write.
+   * A NULL callback means that operation is prohibited and will return
+   * an "out of bounds" error (-13) when accessed.
+   */
+  typedef struct V4_Mmio
   {
-    int32_t DS[256]; /**< Data stack storage (Top at sp-1). */
-    int32_t RS[64];  /**< Return stack storage (Top at rp-1). */
-    int32_t *sp;     /**< Next push position for DS. */
-    int32_t *rp;     /**< Next push position for RS. */
-  } Vm;
+    v4_u32 base;                /**< Base address (absolute) */
+    v4_u32 size;                /**< Window size in bytes */
+    v4_mmio_read32_fn read32;   /**< Optional read callback (NULL = forbidden) */
+    v4_mmio_write32_fn write32; /**< Optional write callback (NULL = forbidden) */
+    void *user;                 /**< User data passed to callbacks */
+  } V4_Mmio;
 
-  /** @brief API/ABI version for compatibility checks.
-   *  @return Always returns 0 for the initial Tier-0 release.
-   *  @since 0
+  /* ------------------------------------------------------------------------- */
+  /* VM configuration                                                          */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Configuration structure used when creating a VM instance.
+   *
+   * The VM operates on a flat 32-bit little-endian address space.
+   * Memory and MMIO regions are defined here and remain constant
+   * throughout the lifetime of the VM.
+   */
+  typedef struct VmConfig
+  {
+    uint8_t *mem;        /**< Base pointer of VM RAM (can be NULL) */
+    v4_u32 mem_size;     /**< RAM size in bytes */
+    const V4_Mmio *mmio; /**< Optional static MMIO table (can be NULL) */
+    int mmio_count;      /**< Number of MMIO entries in the table */
+  } VmConfig;
+
+  /* Forward declarations for opaque VM and Word structures. */
+  struct Vm;
+  struct Word;
+
+/* ------------------------------------------------------------------------- */
+/* Boolean constants (Forth-style truth values)                              */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * @brief Boolean constants used by the VM and Forth-level code.
+ *
+ *  Forth traditionally defines "true" as all bits set (-1) and
+ *  "false" as zero. These match the semantics of signed 32-bit words.
+ */
+#define V4_TRUE ((v4_i32)(-1))
+#define V4_FALSE ((v4_i32)(0))
+
+  /* ------------------------------------------------------------------------- */
+  /* Lifecycle and execution                                                   */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Create a new VM instance.
+   * @param cfg  Pointer to a valid VmConfig.
+   * @return Pointer to the new VM, or NULL on allocation failure.
+   */
+  struct Vm *vm_create(const VmConfig *cfg);
+
+  /**
+   * @brief Reset VM stacks and state to initial positions.
+   * @param vm     VM instance.
+   */
+  void vm_reset(struct Vm *vm);
+
+  /**
+   * @brief Destroy a VM instance and free its resources.
+   * @param vm  VM instance to destroy (NULL-safe).
+   */
+  void vm_destroy(struct Vm *vm);
+
+  /**
+   * @brief Execute the given word entry in the specified VM.
+   * @param vm     VM instance.
+   * @param entry  Entry word to execute.
+   * @return 0 on success, negative error code on failure.
+   */
+  v4_err vm_exec(struct Vm *vm, struct Word *entry);
+
+  /* ------------------------------------------------------------------------- */
+  /* MMIO registration and direct memory access                                */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Dynamically register additional MMIO windows.
+   *        (May be used after creation.)
+   * @param vm     VM instance.
+   * @param list   Pointer to an array of MMIO descriptors.
+   * @param count  Number of elements in the array.
+   * @return 0 on success, negative value on failure.
+   */
+  v4_err vm_register_mmio(struct Vm *vm, const V4_Mmio *list, int count);
+
+  /**
+   * @brief Read a 32-bit little-endian value from the VM memory space.
+   *
+   * Performs alignment, bounds, and MMIO checks.
+   * Intended primarily for testing and embedding, not for fast I/O.
+   *
+   * @param vm    VM instance.
+   * @param addr  Absolute address.
+   * @param out   Output value pointer.
+   * @return 0 on success, negative error code otherwise.
+   */
+  v4_err vm_mem_read32(struct Vm *vm, v4_u32 addr, v4_u32 *out);
+
+  /**
+   * @brief Write a 32-bit little-endian value to the VM memory space.
+   *
+   * Performs alignment, bounds, and MMIO checks.
+   * Intended primarily for testing and embedding, not for fast I/O.
+   *
+   * @param vm    VM instance.
+   * @param addr  Absolute address.
+   * @param val   Value to store.
+   * @return 0 on success, negative error code otherwise.
+   */
+  v4_err vm_mem_write32(struct Vm *vm, v4_u32 addr, v4_u32 val);
+
+  /* ------------------------------------------------------------------------- */
+  /* Minimal stack inspector (for testing)                                     */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Get the current data stack depth.
+   * @param vm  VM instance.
+   * @return Number of elements currently on the data stack.
+   */
+  int vm_ds_depth_public(struct Vm *vm);
+
+  /**
+   * @brief Peek a value from the data stack by index from the top.
+   * @param vm              VM instance.
+   * @param index_from_top  0 = top, 1 = next, ...
+   * @return Value at the given stack position, or 0 if out of range.
+   */
+  v4_i32 vm_ds_peek_public(struct Vm *vm, int index_from_top);
+
+  /* ------------------------------------------------------------------------- */
+  /* Version and error handling                                                */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Get the current version of the VM.
+   * @return Version number as an integer.
    */
   int v4_vm_version(void);
 
-  /** @brief Reset VM stacks to an empty state.
-   *  @param vm Pointer to a valid VM instance.
-   *  @warning Does not clear memory; only resets pointers.
-   *  @since 0
-   */
-  void vm_reset(Vm *vm);
-
-  /** @brief Execute a bytecode buffer with the Tier-0 interpreter.
+  /* ------------------------------------------------------------------------- */
+  /* Error handling notes                                                      */
+  /* ------------------------------------------------------------------------- */
+  /**
+   * All public APIs return 0 on success and a negative v4_err on failure.
+   * Errors are defined in `errors.def` and generated into `errors.h/c`.
    *
-   *  Bytecode is interpreted from @p bc to @p bc+len. Execution stops on
-   *  `RET` or error.
+   * Examples:
+   *  - -12 = Unaligned access
+   *  - -13 = Out of bounds memory access
+   *  - -11 = Division by zero
    *
-   *  @param vm  Pointer to an initialized VM.
-   *  @param bc  Pointer to the bytecode buffer (little-endian immediates).
-   *  @param len Size of the buffer in bytes.
-   *  @retval  0 Success (returned via `RET`).
-   *  @retval -1 Truncated immediate (e.g., `LIT` missing bytes).
-   *  @retval -2 Truncated branch offset (`JMP/JZ/JNZ`).
-   *  @retval -3 Out-of-range jump target.
-   *  @retval -10 Reached end-of-buffer without `RET`.
-   *  @retval -99 Unknown/unimplemented opcode.
-   *  @since 0
+   * Exceptions are never thrown (compiled with -fno-exceptions).
+   * Error propagation is done purely via return values.
    */
-  int vm_exec(Vm *vm, const uint8_t *bc, int len);
 
-  /** @} */ /* end of group v4vm */
+  /* ------------------------------------------------------------------------- */
 
 #ifdef __cplusplus
 } /* extern "C" */
-#endif
-
-#ifdef __cplusplus
-/// \copydoc vm_reset
-inline void vm_reset(Vm &vm) { vm_reset(&vm); }
-
-/// \copydoc vm_exec
-inline int vm_exec(Vm &vm, const uint8_t *bc, int len) { return vm_exec(&vm, bc, len); }
 #endif

@@ -7,6 +7,7 @@
 #include "v4/vm_api.h"
 #include "v4/opcodes.hpp"
 #include "v4/errors.hpp"
+#include "v4/internal/vm.h"
 
 extern "C" int v4_vm_version(void)
 {
@@ -15,11 +16,13 @@ extern "C" int v4_vm_version(void)
 
 extern "C" void vm_reset(Vm *vm)
 {
+  // Reset data/return stacks to initial positions.
   vm->sp = vm->DS;
   vm->rp = vm->RS;
 }
 
-// ----- Data stack helpers -----
+/* ========================== Data stack helpers =========================== */
+
 static inline void ds_push(Vm *vm, int32_t v)
 {
   assert(vm->sp < vm->DS + 256 && "Data stack overflow");
@@ -41,7 +44,8 @@ static inline void ds_poke(Vm *vm, int i, int32_t v)
   *(vm->sp - 1 - i) = v;
 }
 
-// ----- Little-endian readers -----
+/* ===================== Little-endian readers/writers ===================== */
+
 static inline int32_t read_i32_le(const uint8_t *p)
 {
   return (int32_t)((uint32_t)p[0] | ((uint32_t)p[1] << 8) |
@@ -52,8 +56,11 @@ static inline int16_t read_i16_le(const uint8_t *p)
   return (int16_t)((uint16_t)p[0] | ((uint16_t)p[1] << 8));
 }
 
-// ----- VM main execution loop -----
-extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
+/* =================== Internal raw bytecode interpreter =================== */
+/* This keeps your current loop intact so existing tests keep running.
+ * Public API vm_exec(...) will call into a Word-based path later.          */
+
+extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
 {
   assert(vm && bc && len > 0);
   const uint8_t *ip = bc;
@@ -64,64 +71,59 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
     Op op = static_cast<Op>(*ip++);
     switch (op)
     {
-    // Literal
+    /* -------- Literal -------- */
     case Op::LIT:
     {
       if (ip + 4 > ip_end)
-        return static_cast<int>(Err::TruncatedLiteral);
+        return static_cast<v4_err>(Err::TruncatedLiteral);
       int32_t k = read_i32_le(ip);
       ip += 4;
       ds_push(vm, k);
+      break;
     }
-    break;
 
-    // Stack manipulation
+    /* ---- Stack manipulation ---- */
     case Op::DUP:
     {
       int32_t a = ds_peek(vm, 0);
       ds_push(vm, a);
+      break;
     }
-    break;
-
     case Op::DROP:
     {
       (void)ds_pop(vm);
+      break;
     }
-    break;
-
     case Op::SWAP:
     {
       int32_t a = ds_pop(vm);
       int32_t b = ds_pop(vm);
       ds_push(vm, a);
       ds_push(vm, b);
+      break;
     }
-    break;
-
     case Op::OVER:
     {
       int32_t v = ds_peek(vm, 1);
       ds_push(vm, v);
+      break;
     }
-    break;
 
-    // Arithmetic
+    /* -------- Arithmetic -------- */
     case Op::ADD:
     {
       int32_t a = ds_pop(vm);
       int32_t b = ds_pop(vm);
       ds_push(vm, b + a);
+      break;
     }
-    break;
-
     case Op::SUB:
     {
       int32_t a = ds_pop(vm);
       int32_t b = ds_pop(vm);
       ds_push(vm, b - a);
+      break;
     }
-    break;
-
     case Op::MUL:
     {
       int32_t b = ds_pop(vm);
@@ -129,28 +131,26 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
       ds_push(vm, (int32_t)(a * b));
       break;
     }
-
     case Op::DIV:
     {
       int32_t b = ds_pop(vm);
       int32_t a = ds_pop(vm);
       if (b == 0)
-        return static_cast<int>(Err::DivByZero);
+        return static_cast<v4_err>(Err::DivByZero);
       ds_push(vm, a / b);
       break;
     }
-
     case Op::MOD:
     {
       int32_t b = ds_pop(vm);
       int32_t a = ds_pop(vm);
       if (b == 0)
-        return static_cast<int>(Err::DivByZero);
+        return static_cast<v4_err>(Err::DivByZero);
       ds_push(vm, a % b);
       break;
     }
 
-    // Comparison
+    /* -------- Comparison (Forth truth: -1 = true, 0 = false) -------- */
     case Op::EQ:
     {
       int32_t b = ds_pop(vm), a = ds_pop(vm);
@@ -188,7 +188,7 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
       break;
     }
 
-    // Bitwise
+    /* -------- Bitwise -------- */
     case Op::AND:
     {
       int32_t b = ds_pop(vm), a = ds_pop(vm);
@@ -207,32 +207,30 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
       ds_push(vm, a ^ b);
       break;
     }
-    // optional
-    case Op::INVERT:
+    case Op::INVERT: /* optional */
     {
       int32_t a = ds_pop(vm);
       ds_push(vm, ~a);
       break;
     }
 
-    // Control flow
+    /* -------- Control flow -------- */
     case Op::JMP:
     {
       if (ip + 2 > ip_end)
-        return static_cast<int>(Err::TruncatedJump);
+        return static_cast<v4_err>(Err::TruncatedJump);
       int16_t off = read_i16_le(ip);
       ip += 2;
       const uint8_t *tgt = ip + off;
       if (tgt < bc || tgt > ip_end)
-        return static_cast<int>(Err::JumpOutOfRange);
+        return static_cast<v4_err>(Err::JumpOutOfRange);
       ip = tgt;
+      break;
     }
-    break;
-
     case Op::JZ:
     {
       if (ip + 2 > ip_end)
-        return static_cast<int>(Err::TruncatedJump);
+        return static_cast<v4_err>(Err::TruncatedJump);
       int16_t off = read_i16_le(ip);
       ip += 2;
       int32_t cond = ds_pop(vm);
@@ -240,16 +238,15 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
       {
         const uint8_t *tgt = ip + off;
         if (tgt < bc || tgt > ip_end)
-          return static_cast<int>(Err::JumpOutOfRange);
+          return static_cast<v4_err>(Err::JumpOutOfRange);
         ip = tgt;
       }
+      break;
     }
-    break;
-
     case Op::JNZ:
     {
       if (ip + 2 > ip_end)
-        return static_cast<int>(Err::TruncatedJump);
+        return static_cast<v4_err>(Err::TruncatedJump);
       int16_t off = read_i16_le(ip);
       ip += 2;
       int32_t cond = ds_pop(vm);
@@ -257,21 +254,35 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
       {
         const uint8_t *tgt = ip + off;
         if (tgt < bc || tgt > ip_end)
-          return static_cast<int>(Err::JumpOutOfRange);
+          return static_cast<v4_err>(Err::JumpOutOfRange);
         ip = tgt;
       }
+      break;
     }
-    break;
 
-    // Return
+    /* -------- Return -------- */
     case Op::RET:
-      return static_cast<int>(Err::OK);
+      return static_cast<v4_err>(Err::OK);
 
     default:
-      return static_cast<int>(Err::UnknownOp);
+      return static_cast<v4_err>(Err::UnknownOp);
     }
   }
 
-  // If the loop exits, it means we reached the end of bytecode without hitting RET.
-  return static_cast<int>(Err::FellOffEnd);
+  // Reached end of bytecode without hitting RET.
+  return static_cast<v4_err>(Err::FellOffEnd);
+}
+
+/* =========================== Public API entry ============================ */
+/* Word-based execution (Tier-0 stub):
+ *  For now, we don't have a defined Word layout in this file.
+ *  This function is a stub that returns OK to keep linkage and API stable.
+ *  Once Word{ bc,len,... } is solidified, make this call vm_exec_raw(...).   */
+
+extern "C" v4_err vm_exec(Vm *vm, Word *entry)
+{
+  (void)vm;
+  (void)entry;
+  // TODO: adapt to Word-based calling convention and dispatch.
+  return static_cast<v4_err>(Err::OK);
 }
