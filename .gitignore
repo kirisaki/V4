@@ -1,0 +1,13 @@
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/*.user
+/*.vcxproj*
+/*.sln
+/*.o
+/*.obj
+/*.a
+/*.lib
+/*.exe
+/*.dll
+/*.so
