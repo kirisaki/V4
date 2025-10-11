@@ -58,6 +58,65 @@ TEST_CASE("subtraction (LIT/SUB/RET)")
   CHECK(vm.DS[0] == 10);
 }
 
+TEST_CASE("multiplication (LIT/MUL/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 6, 0, 0, 0,
+      (uint8_t)Op::LIT, 7, 0, 0, 0,
+      (uint8_t)Op::MUL,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 42);
+}
+
+TEST_CASE("division (LIT/DIV/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 42, 0, 0, 0,
+      (uint8_t)Op::LIT, 7, 0, 0, 0,
+      (uint8_t)Op::DIV,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 6);
+}
+
+TEST_CASE("modulus (LIT/MOD/RET)")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 43, 0, 0, 0,
+      (uint8_t)Op::LIT, 7, 0, 0, 0,
+      (uint8_t)Op::MOD,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 1);
+}
+
+TEST_CASE("error: division by zero")
+{
+  Vm vm;
+  vm_reset(vm);
+  uint8_t code[] = {
+      (uint8_t)Op::LIT, 42, 0, 0, 0,
+      (uint8_t)Op::LIT, 0, 0, 0, 0,
+      (uint8_t)Op::DIV,
+      (uint8_t)Op::RET};
+  int rc = vm_exec(vm, code, sizeof(code));
+  CHECK(rc == static_cast<int>(Err::DivByZero));
+  CHECK(vm.sp == vm.DS + 0);
+}
+
 TEST_CASE("basic stack ops (LIT/SWAP/DUP/OVER/DROP/RET)")
 {
   Vm vm;

@@ -119,6 +119,34 @@ extern "C" int vm_exec(Vm *vm, const uint8_t *bc, int len)
     }
     break;
 
+    case Op::MUL:
+    {
+      int32_t b = ds_pop(vm);
+      int32_t a = ds_pop(vm);
+      ds_push(vm, (int32_t)(a * b));
+      break;
+    }
+
+    case Op::DIV:
+    { // 入れるなら
+      int32_t b = ds_pop(vm);
+      int32_t a = ds_pop(vm);
+      if (b == 0)
+        return static_cast<int>(Err::DivByZero);
+      ds_push(vm, a / b);
+      break;
+    }
+
+    case Op::MOD:
+    {
+      int32_t b = ds_pop(vm);
+      int32_t a = ds_pop(vm);
+      if (b == 0)
+        return static_cast<int>(Err::DivByZero);
+      ds_push(vm, a % b);
+      break;
+    }
+
     case Op::JMP:
     {
       if (ip + 2 > ip_end)
