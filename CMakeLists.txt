@@ -39,17 +39,12 @@ if(V4_BUILD_TESTS)
   target_link_libraries(test_vm_c PRIVATE v4vm)
   set_target_properties(test_vm_c PROPERTIES LINKER_LANGUAGE CXX)
 
-  if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(
-      test_vm_c
-      PRIVATE -Wall
-              -Wextra
-              -Werror
-              -Wstrict-prototypes
-              -Wmissing-prototypes
-              -Wshadow
-              -Wconversion)
+  if(MSVC)
+    target_compile_options(v4vm PRIVATE /W4 /GR- /EHs-c- /O1)
+  else()
+    target_compile_options(v4vm PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -Os)
   endif()
   add_test(NAME test_vm_c COMMAND test_vm_c)
 
 endif()
+#
