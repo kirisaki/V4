@@ -24,26 +24,26 @@ extern "C" void vm_reset(Vm *vm)
 
 /* ========================== Data stack helpers =========================== */
 
-static inline int32_t ds_push(Vm *vm, int32_t v)
+static inline v4_i32 ds_push(Vm *vm, int32_t v)
 {
   if (vm->sp > vm->DS + 256)
     return static_cast<v4_err>(Err::StackOverflow);
   *vm->sp++ = v;
   return 0;
 }
-static inline int32_t ds_pop(Vm *vm)
+static inline v4_i32 ds_pop(Vm *vm)
 {
   if (vm->sp < vm->DS)
     return static_cast<v4_err>(Err::StackUnderflow);
   return *--vm->sp;
 }
-static inline int32_t ds_peek(const Vm *vm, int i = 0)
+static inline v4_i32 ds_peek(const Vm *vm, int i = 0)
 {
   if (vm->sp - 1 - i > vm->DS)
     return static_cast<v4_err>(Err::StackUnderflow);
   return *(vm->sp - 1 - i);
 }
-static inline int32_t ds_poke(Vm *vm, int i, int32_t v)
+static inline v4_i32 ds_poke(Vm *vm, int i, int32_t v)
 {
   if (vm->sp - 1 - i < vm->DS)
     return static_cast<v4_err>(Err::StackUnderflow);
@@ -53,12 +53,12 @@ static inline int32_t ds_poke(Vm *vm, int i, int32_t v)
 
 /* ===================== Little-endian readers/writers ===================== */
 
-static inline int32_t read_i32_le(const uint8_t *p)
+static inline v4_i32 read_i32_le(const v4_u8 *p)
 {
-  return (int32_t)((uint32_t)p[0] | ((uint32_t)p[1] << 8) |
-                   ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24));
+  return (v4_i32)((v4_u32)p[0] | ((uint32_t)p[1] << 8) |
+                  ((v4_u32)p[2] << 16) | ((v4_i32)p[3] << 24));
 }
-static inline int16_t read_i16_le(const uint8_t *p)
+static inline int16_t read_i16_le(const v4_u8 *p)
 {
   return (int16_t)((uint16_t)p[0] | ((uint16_t)p[1] << 8));
 }
@@ -67,11 +67,11 @@ static inline int16_t read_i16_le(const uint8_t *p)
 /* This keeps your current loop intact so existing tests keep running.
  * Public API vm_exec(...) will call into a Word-based path later.          */
 
-extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
+extern "C" v4_err vm_exec_raw(Vm *vm, const v4_u8 *bc, int len)
 {
   assert(vm && bc && len > 0);
-  const uint8_t *ip = bc;
-  const uint8_t *ip_end = bc + len;
+  const v4_u8 *ip = bc;
+  const v4_u8 *ip_end = bc + len;
 
   while (ip < ip_end)
   {
@@ -83,7 +83,7 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
     {
       if (ip + 4 > ip_end)
         return static_cast<v4_err>(Err::TruncatedLiteral);
-      int32_t k = read_i32_le(ip);
+      v4_i32 k = read_i32_le(ip);
       ip += 4;
       ds_push(vm, k);
       break;
@@ -92,7 +92,7 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
     /* ---- Stack manipulation ---- */
     case Op::DUP:
     {
-      int32_t a = ds_peek(vm, 0);
+      v4_i32 a = ds_peek(vm, 0);
       ds_push(vm, a);
       break;
     }
@@ -103,15 +103,15 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
     }
     case Op::SWAP:
     {
-      int32_t a = ds_pop(vm);
-      int32_t b = ds_pop(vm);
+      v4_i32 a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm);
       ds_push(vm, a);
       ds_push(vm, b);
       break;
     }
     case Op::OVER:
     {
-      int32_t v = ds_peek(vm, 1);
+      v4_i32 v = ds_peek(vm, 1);
       ds_push(vm, v);
       break;
     }
@@ -119,29 +119,29 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
     /* -------- Arithmetic -------- */
     case Op::ADD:
     {
-      int32_t a = ds_pop(vm);
-      int32_t b = ds_pop(vm);
+      v4_i32 a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm);
       ds_push(vm, b + a);
       break;
     }
     case Op::SUB:
     {
-      int32_t a = ds_pop(vm);
-      int32_t b = ds_pop(vm);
+      v4_i32 a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm);
       ds_push(vm, b - a);
       break;
     }
     case Op::MUL:
     {
-      int32_t b = ds_pop(vm);
-      int32_t a = ds_pop(vm);
-      ds_push(vm, (int32_t)(a * b));
+      v4_i32 b = ds_pop(vm);
+      v4_i32 a = ds_pop(vm);
+      ds_push(vm, (v4_i32)(a * b));
       break;
     }
     case Op::DIV:
     {
-      int32_t b = ds_pop(vm);
-      int32_t a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm);
+      v4_i32 a = ds_pop(vm);
       if (b == 0)
         return static_cast<v4_err>(Err::DivByZero);
       ds_push(vm, a / b);
@@ -149,8 +149,8 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
     }
     case Op::MOD:
     {
-      int32_t b = ds_pop(vm);
-      int32_t a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm);
+      v4_i32 a = ds_pop(vm);
       if (b == 0)
         return static_cast<v4_err>(Err::DivByZero);
       ds_push(vm, a % b);
@@ -160,37 +160,37 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
     /* -------- Comparison (Forth truth: -1 = true, 0 = false) -------- */
     case Op::EQ:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a == b ? V4_TRUE : V4_FALSE);
       break;
     }
     case Op::NE:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a != b ? V4_TRUE : V4_FALSE);
       break;
     }
     case Op::LT:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a < b ? V4_TRUE : V4_FALSE);
       break;
     }
     case Op::LE:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a <= b ? V4_TRUE : V4_FALSE);
       break;
     }
     case Op::GT:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a > b ? V4_TRUE : V4_FALSE);
       break;
     }
     case Op::GE:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a >= b ? V4_TRUE : V4_FALSE);
       break;
     }
@@ -198,25 +198,25 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
     /* -------- Bitwise -------- */
     case Op::AND:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a & b);
       break;
     }
     case Op::OR:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a | b);
       break;
     }
     case Op::XOR:
     {
-      int32_t b = ds_pop(vm), a = ds_pop(vm);
+      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
       ds_push(vm, a ^ b);
       break;
     }
     case Op::INVERT: /* optional */
     {
-      int32_t a = ds_pop(vm);
+      v4_i32 a = ds_pop(vm);
       ds_push(vm, ~a);
       break;
     }
@@ -228,7 +228,7 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
         return static_cast<v4_err>(Err::TruncatedJump);
       int16_t off = read_i16_le(ip);
       ip += 2;
-      const uint8_t *tgt = ip + off;
+      const v4_u8 *tgt = ip + off;
       if (tgt < bc || tgt > ip_end)
         return static_cast<v4_err>(Err::JumpOutOfRange);
       ip = tgt;
@@ -240,10 +240,10 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
         return static_cast<v4_err>(Err::TruncatedJump);
       int16_t off = read_i16_le(ip);
       ip += 2;
-      int32_t cond = ds_pop(vm);
+      v4_i32 cond = ds_pop(vm);
       if (cond == 0)
       {
-        const uint8_t *tgt = ip + off;
+        const v4_u8 *tgt = ip + off;
         if (tgt < bc || tgt > ip_end)
           return static_cast<v4_err>(Err::JumpOutOfRange);
         ip = tgt;
@@ -256,10 +256,10 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
         return static_cast<v4_err>(Err::TruncatedJump);
       int16_t off = read_i16_le(ip);
       ip += 2;
-      int32_t cond = ds_pop(vm);
+      v4_i32 cond = ds_pop(vm);
       if (cond != 0)
       {
-        const uint8_t *tgt = ip + off;
+        const v4_u8 *tgt = ip + off;
         if (tgt < bc || tgt > ip_end)
           return static_cast<v4_err>(Err::JumpOutOfRange);
         ip = tgt;
@@ -274,7 +274,7 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const uint8_t *bc, int len)
       v4_u32 val = 0;
       if (v4_err e = v4_mem_read32_core(vm, addr, &val))
         return e;
-      ds_push(vm, (int32_t)val);
+      ds_push(vm, (v4_i32)val);
       break;
     }
 

@@ -15,6 +15,8 @@ extern "C"
   typedef int32_t v4_i32;
   /** 32-bit unsigned integer used internally by the VM. */
   typedef uint32_t v4_u32;
+  /** 8-bit unsigned integer used for bytecode and memory. */
+  typedef uint8_t v4_u8;
   /** Error code type. 0 = OK, negative = error. */
   typedef int v4_err;
 
