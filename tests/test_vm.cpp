@@ -1,11 +1,11 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest.h"
-
 #include <cstdint>
-#include "v4/vm_api.h"
-#include "v4/opcodes.hpp"
+
+#include "doctest.h"
 #include "v4/errors.hpp"
 #include "v4/internal/vm.h"
+#include "v4/opcodes.hpp"
+#include "v4/vm_api.h"
 
 /* ------------------------------------------------------------------------- */
 /* Bytecode emit helpers                                                     */
@@ -42,14 +42,21 @@ TEST_CASE("basic stack ops (LIT/SWAP/DUP/OVER/DROP/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 1, 0, 0, 0,
-      (v4_u8)Op::LIT, 2, 0, 0, 0,
-      (v4_u8)Op::SWAP,
-      (v4_u8)Op::DUP,
-      (v4_u8)Op::OVER,
-      (v4_u8)Op::DROP,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT,
+                  1,
+                  0,
+                  0,
+                  0,
+                  (v4_u8)Op::LIT,
+                  2,
+                  0,
+                  0,
+                  0,
+                  (v4_u8)Op::SWAP,
+                  (v4_u8)Op::DUP,
+                  (v4_u8)Op::OVER,
+                  (v4_u8)Op::DROP,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 3);
@@ -62,9 +69,7 @@ TEST_CASE("basic arithmetic (LIT/ADD/RET)")
   Vm vm{};
   vm_reset(&vm);
   v4_u8 code[] = {
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::LIT, 20, 0, 0, 0,
-      (v4_u8)Op::ADD,
+      (v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::LIT, 20, 0, 0, 0, (v4_u8)Op::ADD,
       (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
@@ -77,9 +82,7 @@ TEST_CASE("subtraction (LIT/SUB/RET)")
   Vm vm{};
   vm_reset(&vm);
   v4_u8 code[] = {
-      (v4_u8)Op::LIT, 20, 0, 0, 0,
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::SUB,
+      (v4_u8)Op::LIT, 20, 0, 0, 0, (v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::SUB,
       (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
@@ -91,11 +94,8 @@ TEST_CASE("multiplication (LIT/MUL/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 6, 0, 0, 0,
-      (v4_u8)Op::LIT, 7, 0, 0, 0,
-      (v4_u8)Op::MUL,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 6, 0, 0, 0, (v4_u8)Op::LIT, 7, 0, 0, 0, (v4_u8)Op::MUL,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -106,11 +106,8 @@ TEST_CASE("division (LIT/DIV/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 42, 0, 0, 0,
-      (v4_u8)Op::LIT, 7, 0, 0, 0,
-      (v4_u8)Op::DIV,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 42, 0, 0, 0, (v4_u8)Op::LIT, 7, 0, 0, 0, (v4_u8)Op::DIV,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -121,11 +118,8 @@ TEST_CASE("modulus (LIT/MOD/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 43, 0, 0, 0,
-      (v4_u8)Op::LIT, 7, 0, 0, 0,
-      (v4_u8)Op::MOD,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 43, 0, 0, 0, (v4_u8)Op::LIT, 7, 0, 0, 0, (v4_u8)Op::MOD,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -136,11 +130,8 @@ TEST_CASE("error: division by zero")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 42, 0, 0, 0,
-      (v4_u8)Op::LIT, 0, 0, 0, 0,
-      (v4_u8)Op::DIV,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 42, 0, 0, 0, (v4_u8)Op::LIT, 0, 0, 0, 0, (v4_u8)Op::DIV,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == static_cast<int>(Err::DivByZero));
   CHECK(vm.sp == vm.DS + 0);
@@ -153,11 +144,8 @@ TEST_CASE("equality (LIT/EQ/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::EQ,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::EQ,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -168,11 +156,8 @@ TEST_CASE("comparison (LIT/NE/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::LIT, 20, 0, 0, 0,
-      (v4_u8)Op::NE,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::LIT, 20, 0, 0, 0, (v4_u8)Op::NE,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -183,11 +168,8 @@ TEST_CASE("comparison (LIT/GT/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 20, 0, 0, 0,
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::GT,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 20, 0, 0, 0, (v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::GT,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -198,11 +180,8 @@ TEST_CASE("comparison (LIT/GE/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::GE,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::GE,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -213,11 +192,8 @@ TEST_CASE("comparison (LIT/LT/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::LIT, 20, 0, 0, 0,
-      (v4_u8)Op::LT,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::LIT, 20, 0, 0, 0, (v4_u8)Op::LT,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -228,11 +204,8 @@ TEST_CASE("comparison (LIT/LE/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::LIT, 10, 0, 0, 0,
-      (v4_u8)Op::LE,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::LIT, 10, 0, 0, 0, (v4_u8)Op::LE,
+                  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -246,11 +219,8 @@ TEST_CASE("bitwise AND (LIT/AND/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 0b1100, 0, 0, 0,
-      (v4_u8)Op::LIT, 0b1010, 0, 0, 0,
-      (v4_u8)Op::AND,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 0b1100,        0, 0, 0, (v4_u8)Op::LIT, 0b1010, 0, 0, 0,
+                  (v4_u8)Op::AND, (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -261,11 +231,8 @@ TEST_CASE("bitwise OR (LIT/OR/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 0b1100, 0, 0, 0,
-      (v4_u8)Op::LIT, 0b1010, 0, 0, 0,
-      (v4_u8)Op::OR,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 0b1100,        0, 0, 0, (v4_u8)Op::LIT, 0b1010, 0, 0, 0,
+                  (v4_u8)Op::OR,  (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -276,10 +243,7 @@ TEST_CASE("bitwise INVERT (LIT/INVERT/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 0b1100, 0, 0, 0,
-      (v4_u8)Op::INVERT,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 0b1100, 0, 0, 0, (v4_u8)Op::INVERT, (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -290,11 +254,8 @@ TEST_CASE("bitwise XOR (LIT/XOR/RET)")
 {
   Vm vm{};
   vm_reset(&vm);
-  v4_u8 code[] = {
-      (v4_u8)Op::LIT, 0b1100, 0, 0, 0,
-      (v4_u8)Op::LIT, 0b1010, 0, 0, 0,
-      (v4_u8)Op::XOR,
-      (v4_u8)Op::RET};
+  v4_u8 code[] = {(v4_u8)Op::LIT, 0b1100,        0, 0, 0, (v4_u8)Op::LIT, 0b1010, 0, 0, 0,
+                  (v4_u8)Op::XOR, (v4_u8)Op::RET};
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
@@ -309,10 +270,10 @@ TEST_CASE("unconditional branch (JMP)")
   Vm vm{};
   vm_reset(&vm);
   v4_u8 code[] = {
-      (v4_u8)Op::LIT, 1, 0, 0, 0, // 0: DS[0]=1
-      (v4_u8)Op::JMP, 5, 0,       // 5: jump to 12
-      (v4_u8)Op::LIT, 2, 0, 0, 0, // 7: DS[0]=2 (skipped)
-      (v4_u8)Op::RET              // 12:
+      (v4_u8)Op::LIT, 1, 0, 0, 0,  // 0: DS[0]=1
+      (v4_u8)Op::JMP, 5, 0,        // 5: jump to 12
+      (v4_u8)Op::LIT, 2, 0, 0, 0,  // 7: DS[0]=2 (skipped)
+      (v4_u8)Op::RET               // 12:
   };
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
@@ -325,12 +286,12 @@ TEST_CASE("conditional branch (JZ)")
   Vm vm{};
   vm_reset(&vm);
   v4_u8 code[] = {
-      (v4_u8)Op::LIT, 0, 0, 0, 0, // 0: DS[0]=0
-      (v4_u8)Op::JZ, 8, 0,        // 5: jump to 14 if DS[0]==0
-      (v4_u8)Op::LIT, 1, 0, 0, 0, // 7: DS[0]=1 (skipped)
-      (v4_u8)Op::JMP, 6, 0,       // 12: jump to 20
-      (v4_u8)Op::LIT, 2, 0, 0, 0, // 14: DS[0]=2
-      (v4_u8)Op::RET              // 19:
+      (v4_u8)Op::LIT, 0, 0, 0, 0,  // 0: DS[0]=0
+      (v4_u8)Op::JZ,  8, 0,        // 5: jump to 14 if DS[0]==0
+      (v4_u8)Op::LIT, 1, 0, 0, 0,  // 7: DS[0]=1 (skipped)
+      (v4_u8)Op::JMP, 6, 0,        // 12: jump to 20
+      (v4_u8)Op::LIT, 2, 0, 0, 0,  // 14: DS[0]=2
+      (v4_u8)Op::RET               // 19:
   };
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
@@ -343,12 +304,12 @@ TEST_CASE("conditional branch (JNZ)")
   Vm vm{};
   vm_reset(&vm);
   v4_u8 code[] = {
-      (v4_u8)Op::LIT, 1, 0, 0, 0, // 0: DS[0]=1
-      (v4_u8)Op::JNZ, 8, 0,       // 5: jump to 14 if DS[0]!=0
-      (v4_u8)Op::LIT, 2, 0, 0, 0, // 7: DS[0]=2 (skipped)
-      (v4_u8)Op::JMP, 6, 0,       // 12: jump to 20
-      (v4_u8)Op::LIT, 3, 0, 0, 0, // 14: DS[0]=3
-      (v4_u8)Op::RET              // 19:
+      (v4_u8)Op::LIT, 1, 0, 0, 0,  // 0: DS[0]=1
+      (v4_u8)Op::JNZ, 8, 0,        // 5: jump to 14 if DS[0]!=0
+      (v4_u8)Op::LIT, 2, 0, 0, 0,  // 7: DS[0]=2 (skipped)
+      (v4_u8)Op::JMP, 6, 0,        // 12: jump to 20
+      (v4_u8)Op::LIT, 3, 0, 0, 0,  // 14: DS[0]=3
+      (v4_u8)Op::RET               // 19:
   };
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == 0);
@@ -364,7 +325,7 @@ TEST_CASE("error: truncated LIT immediate")
   Vm vm{};
   vm_reset(&vm);
   v4_u8 code[] = {
-      (v4_u8)Op::LIT, 1, 0, 0 // missing one byte
+      (v4_u8)Op::LIT, 1, 0, 0  // missing one byte
   };
   int rc = vm_exec_raw(&vm, code, (int)sizeof(code));
   CHECK(rc == static_cast<int>(Err::TruncatedLiteral));
@@ -382,21 +343,21 @@ TEST_CASE("Simple loop with JNZ")
   // Program: count down from 5 to 0 using a loop.
   v4_u8 code[32];
   int k = 0;
-  emit8(code, &k, (v4_u8)Op::LIT); // Push 5
+  emit8(code, &k, (v4_u8)Op::LIT);  // Push 5
   emit32(code, &k, 5);
   int loop_start = k;
-  emit8(code, &k, (v4_u8)Op::LIT); // Push 1
+  emit8(code, &k, (v4_u8)Op::LIT);  // Push 1
   emit32(code, &k, 1);
-  emit8(code, &k, (v4_u8)Op::SUB); // n = n - 1
-  emit8(code, &k, (v4_u8)Op::DUP); // duplicate for JNZ test
-  emit8(code, &k, (v4_u8)Op::JNZ); // if not zero, jump back
+  emit8(code, &k, (v4_u8)Op::SUB);  // n = n - 1
+  emit8(code, &k, (v4_u8)Op::DUP);  // duplicate for JNZ test
+  emit8(code, &k, (v4_u8)Op::JNZ);  // if not zero, jump back
   emit16(code, &k, (int16_t)(loop_start - (k + 2)));
   emit8(code, &k, (v4_u8)Op::RET);
 
   int rc = vm_exec_raw(&vm, code, k);
   CHECK(rc == 0);
-  CHECK(vm.DS[0] == 0);      // final value expected to be 0
-  CHECK(vm.sp == vm.DS + 1); // single value remains
+  CHECK(vm.DS[0] == 0);       // final value expected to be 0
+  CHECK(vm.sp == vm.DS + 1);  // single value remains
 }
 
 /* ------------------------------------------------------------------------- */

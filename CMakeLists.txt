@@ -8,8 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ---- Libraries
 add_library(v4vm STATIC src/core.cpp src/memory.cpp)
 target_include_directories(v4vm PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(v4vm
-                           PRIVATE ${PROJECT_SOURCE_DIR}/include/v4/internal)
+target_include_directories(v4vm PRIVATE ${PROJECT_SOURCE_DIR}/include/v4/internal)
 target_compile_options(v4vm PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -Os)
 
 # ---- Tools

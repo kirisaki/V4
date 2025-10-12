@@ -1,9 +1,11 @@
 // src/memory.cpp — public API wrappers + core memory ops (Tier-0)
+#include "v4/internal/memory.hpp"  // v4_is_aligned4 / v4_is_in_ram + prototypes
+
 #include <stdlib.h>
 #include <string.h>
+
+#include "v4/internal/vm.h"  // internal Vm definition (your repo)
 #include "v4/vm_api.h"
-#include "v4/internal/vm.h"       // internal Vm definition (your repo)
-#include "v4/internal/memory.hpp" // v4_is_aligned4 / v4_is_in_ram + prototypes
 
 /* ---- Little-endian helpers ---- */
 static inline v4_u32 ld_le32(const uint8_t *p)
@@ -43,7 +45,7 @@ v4_err v4_mem_read32_core(Vm *vm, v4_u32 addr, v4_u32 *out)
       return e;
     const V4_Mmio *m = &vm->mmio[mi];
     if (!m->read32)
-      return -13; // forbidden -> treat as OOB
+      return -13;  // forbidden -> treat as OOB
     return m->read32(m->user, addr, out);
   }
 
@@ -70,7 +72,7 @@ v4_err v4_mem_write32_core(Vm *vm, v4_u32 addr, v4_u32 val)
       return e;
     const V4_Mmio *m = &vm->mmio[mi];
     if (!m->write32)
-      return -13; // forbidden
+      return -13;  // forbidden
     return m->write32(m->user, addr, val);
   }
 
@@ -114,7 +116,7 @@ extern "C" struct Vm *vm_create(const VmConfig *cfg)
   ::memset(vm, 0, sizeof(Vm));
 
   // Stacks
-  vm_reset(vm); // declared in vm_api.h / defined in vm_core.cpp
+  vm_reset(vm);  // declared in vm_api.h / defined in vm_core.cpp
 
   // Memory config
   vm->mem = cfg->mem;
@@ -124,7 +126,7 @@ extern "C" struct Vm *vm_create(const VmConfig *cfg)
   vm->mmio_count = 0;
   if (cfg->mmio && cfg->mmio_count > 0)
   {
-    const int cap = Vm::V4_MAX_MMIO; // from internal vm.h
+    const int cap = Vm::V4_MAX_MMIO;  // from internal vm.h
     const int n = (cfg->mmio_count <= cap) ? cfg->mmio_count : cap;
     for (int i = 0; i < n; ++i)
       vm->mmio[i] = cfg->mmio[i];

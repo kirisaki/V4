@@ -1,7 +1,8 @@
 #pragma once
 
 // Error code definition using the same pattern as opcodes.def
-// Define ERR(name, val, msg) before including this file if you want to extract text or mapping.
+// Define ERR(name, val, msg) before including this file if you want to extract text or
+// mapping.
 
 #ifndef ERR
 #define ERR(name, val, msg) name = val,
@@ -24,7 +25,7 @@ inline const char *err_str(Err e)
     return msg;
 #include "v4/errors.def"
 #undef ERR
-  default:
-    return "unknown error";
+    default:
+      return "unknown error";
   }
 }

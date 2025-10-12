@@ -1,9 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest.h"
-
 #include <string.h>
-#include "v4/vm_api.h"
+
+#include "doctest.h"
 #include "v4/internal/vm.h"
+#include "v4/vm_api.h"
 
 /* ------------------------------------------------------------------------- */
 /* Dummy MMIO handlers                                                       */
@@ -85,7 +85,7 @@ TEST_CASE("Out-of-bounds access handling")
   // Crossing the end of memory should fail
   v4_u32 out = 0;
   e = vm_mem_read32(vm, 13u, &out);
-  CHECK(e == -13); // OobMemory
+  CHECK(e == -13);  // OobMemory
 
   vm_destroy(vm);
 }
@@ -101,7 +101,7 @@ TEST_CASE("Unaligned access detection")
   REQUIRE(vm);
 
   v4_err e = vm_mem_write32(vm, 2u, 0);
-  CHECK(e == -12); // Unaligned
+  CHECK(e == -12);  // Unaligned
 
   vm_destroy(vm);
 }
@@ -113,11 +113,10 @@ TEST_CASE("MMIO callback dispatch")
 {
   uint8_t ram[64] = {};
   Dummy dummy{};
-  V4_Mmio m{
-      /* base */ 0x20u,
-      /* size */ 0x10u,
-      /* rd/wr */ d_read32, d_write32,
-      /* user */ &dummy};
+  V4_Mmio m{/* base */ 0x20u,
+            /* size */ 0x10u,
+            /* rd/wr */ d_read32, d_write32,
+            /* user */ &dummy};
   VmConfig cfg{ram, (v4_u32)sizeof(ram), &m, 1};
   Vm *vm = vm_create(&cfg);
   REQUIRE(vm);

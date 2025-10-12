@@ -1,6 +1,6 @@
 #pragma once
-#include "v4/vm_api.h"
 #include "v4/internal/vm.h"
+#include "v4/vm_api.h"
 
 /**
  * Core memory helpers used by LOAD/STORE and public API wrappers.

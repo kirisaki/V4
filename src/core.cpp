@@ -1,14 +1,14 @@
+#include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cassert>
 
-#include "v4/vm_api.h"
-#include "v4/opcodes.hpp"
 #include "v4/errors.hpp"
-#include "v4/internal/vm.h"
 #include "v4/internal/memory.hpp"
+#include "v4/internal/vm.h"
+#include "v4/opcodes.hpp"
+#include "v4/vm_api.h"
 
 extern "C" int v4_vm_version(void)
 {
@@ -55,8 +55,8 @@ static inline v4_i32 ds_poke(Vm *vm, int i, int32_t v)
 
 static inline v4_i32 read_i32_le(const v4_u8 *p)
 {
-  return (v4_i32)((v4_u32)p[0] | ((uint32_t)p[1] << 8) |
-                  ((v4_u32)p[2] << 16) | ((v4_i32)p[3] << 24));
+  return (v4_i32)((v4_u32)p[0] | ((uint32_t)p[1] << 8) | ((v4_u32)p[2] << 16) |
+                  ((v4_i32)p[3] << 24));
 }
 static inline int16_t read_i16_le(const v4_u8 *p)
 {
@@ -78,221 +78,221 @@ extern "C" v4_err vm_exec_raw(Vm *vm, const v4_u8 *bc, int len)
     Op op = static_cast<Op>(*ip++);
     switch (op)
     {
-    /* -------- Literal -------- */
-    case Op::LIT:
-    {
-      if (ip + 4 > ip_end)
-        return static_cast<v4_err>(Err::TruncatedLiteral);
-      v4_i32 k = read_i32_le(ip);
-      ip += 4;
-      ds_push(vm, k);
-      break;
-    }
-
-    /* ---- Stack manipulation ---- */
-    case Op::DUP:
-    {
-      v4_i32 a = ds_peek(vm, 0);
-      ds_push(vm, a);
-      break;
-    }
-    case Op::DROP:
-    {
-      (void)ds_pop(vm);
-      break;
-    }
-    case Op::SWAP:
-    {
-      v4_i32 a = ds_pop(vm);
-      v4_i32 b = ds_pop(vm);
-      ds_push(vm, a);
-      ds_push(vm, b);
-      break;
-    }
-    case Op::OVER:
-    {
-      v4_i32 v = ds_peek(vm, 1);
-      ds_push(vm, v);
-      break;
-    }
-
-    /* -------- Arithmetic -------- */
-    case Op::ADD:
-    {
-      v4_i32 a = ds_pop(vm);
-      v4_i32 b = ds_pop(vm);
-      ds_push(vm, b + a);
-      break;
-    }
-    case Op::SUB:
-    {
-      v4_i32 a = ds_pop(vm);
-      v4_i32 b = ds_pop(vm);
-      ds_push(vm, b - a);
-      break;
-    }
-    case Op::MUL:
-    {
-      v4_i32 b = ds_pop(vm);
-      v4_i32 a = ds_pop(vm);
-      ds_push(vm, (v4_i32)(a * b));
-      break;
-    }
-    case Op::DIV:
-    {
-      v4_i32 b = ds_pop(vm);
-      v4_i32 a = ds_pop(vm);
-      if (b == 0)
-        return static_cast<v4_err>(Err::DivByZero);
-      ds_push(vm, a / b);
-      break;
-    }
-    case Op::MOD:
-    {
-      v4_i32 b = ds_pop(vm);
-      v4_i32 a = ds_pop(vm);
-      if (b == 0)
-        return static_cast<v4_err>(Err::DivByZero);
-      ds_push(vm, a % b);
-      break;
-    }
-
-    /* -------- Comparison (Forth truth: -1 = true, 0 = false) -------- */
-    case Op::EQ:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a == b ? V4_TRUE : V4_FALSE);
-      break;
-    }
-    case Op::NE:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a != b ? V4_TRUE : V4_FALSE);
-      break;
-    }
-    case Op::LT:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a < b ? V4_TRUE : V4_FALSE);
-      break;
-    }
-    case Op::LE:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a <= b ? V4_TRUE : V4_FALSE);
-      break;
-    }
-    case Op::GT:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a > b ? V4_TRUE : V4_FALSE);
-      break;
-    }
-    case Op::GE:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a >= b ? V4_TRUE : V4_FALSE);
-      break;
-    }
-
-    /* -------- Bitwise -------- */
-    case Op::AND:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a & b);
-      break;
-    }
-    case Op::OR:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a | b);
-      break;
-    }
-    case Op::XOR:
-    {
-      v4_i32 b = ds_pop(vm), a = ds_pop(vm);
-      ds_push(vm, a ^ b);
-      break;
-    }
-    case Op::INVERT: /* optional */
-    {
-      v4_i32 a = ds_pop(vm);
-      ds_push(vm, ~a);
-      break;
-    }
-
-    /* -------- Control flow -------- */
-    case Op::JMP:
-    {
-      if (ip + 2 > ip_end)
-        return static_cast<v4_err>(Err::TruncatedJump);
-      int16_t off = read_i16_le(ip);
-      ip += 2;
-      const v4_u8 *tgt = ip + off;
-      if (tgt < bc || tgt > ip_end)
-        return static_cast<v4_err>(Err::JumpOutOfRange);
-      ip = tgt;
-      break;
-    }
-    case Op::JZ:
-    {
-      if (ip + 2 > ip_end)
-        return static_cast<v4_err>(Err::TruncatedJump);
-      int16_t off = read_i16_le(ip);
-      ip += 2;
-      v4_i32 cond = ds_pop(vm);
-      if (cond == 0)
+      /* -------- Literal -------- */
+      case Op::LIT:
       {
+        if (ip + 4 > ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        v4_i32 k = read_i32_le(ip);
+        ip += 4;
+        ds_push(vm, k);
+        break;
+      }
+
+      /* ---- Stack manipulation ---- */
+      case Op::DUP:
+      {
+        v4_i32 a = ds_peek(vm, 0);
+        ds_push(vm, a);
+        break;
+      }
+      case Op::DROP:
+      {
+        (void)ds_pop(vm);
+        break;
+      }
+      case Op::SWAP:
+      {
+        v4_i32 a = ds_pop(vm);
+        v4_i32 b = ds_pop(vm);
+        ds_push(vm, a);
+        ds_push(vm, b);
+        break;
+      }
+      case Op::OVER:
+      {
+        v4_i32 v = ds_peek(vm, 1);
+        ds_push(vm, v);
+        break;
+      }
+
+      /* -------- Arithmetic -------- */
+      case Op::ADD:
+      {
+        v4_i32 a = ds_pop(vm);
+        v4_i32 b = ds_pop(vm);
+        ds_push(vm, b + a);
+        break;
+      }
+      case Op::SUB:
+      {
+        v4_i32 a = ds_pop(vm);
+        v4_i32 b = ds_pop(vm);
+        ds_push(vm, b - a);
+        break;
+      }
+      case Op::MUL:
+      {
+        v4_i32 b = ds_pop(vm);
+        v4_i32 a = ds_pop(vm);
+        ds_push(vm, (v4_i32)(a * b));
+        break;
+      }
+      case Op::DIV:
+      {
+        v4_i32 b = ds_pop(vm);
+        v4_i32 a = ds_pop(vm);
+        if (b == 0)
+          return static_cast<v4_err>(Err::DivByZero);
+        ds_push(vm, a / b);
+        break;
+      }
+      case Op::MOD:
+      {
+        v4_i32 b = ds_pop(vm);
+        v4_i32 a = ds_pop(vm);
+        if (b == 0)
+          return static_cast<v4_err>(Err::DivByZero);
+        ds_push(vm, a % b);
+        break;
+      }
+
+      /* -------- Comparison (Forth truth: -1 = true, 0 = false) -------- */
+      case Op::EQ:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a == b ? V4_TRUE : V4_FALSE);
+        break;
+      }
+      case Op::NE:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a != b ? V4_TRUE : V4_FALSE);
+        break;
+      }
+      case Op::LT:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a < b ? V4_TRUE : V4_FALSE);
+        break;
+      }
+      case Op::LE:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a <= b ? V4_TRUE : V4_FALSE);
+        break;
+      }
+      case Op::GT:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a > b ? V4_TRUE : V4_FALSE);
+        break;
+      }
+      case Op::GE:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a >= b ? V4_TRUE : V4_FALSE);
+        break;
+      }
+
+      /* -------- Bitwise -------- */
+      case Op::AND:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a & b);
+        break;
+      }
+      case Op::OR:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a | b);
+        break;
+      }
+      case Op::XOR:
+      {
+        v4_i32 b = ds_pop(vm), a = ds_pop(vm);
+        ds_push(vm, a ^ b);
+        break;
+      }
+      case Op::INVERT: /* optional */
+      {
+        v4_i32 a = ds_pop(vm);
+        ds_push(vm, ~a);
+        break;
+      }
+
+      /* -------- Control flow -------- */
+      case Op::JMP:
+      {
+        if (ip + 2 > ip_end)
+          return static_cast<v4_err>(Err::TruncatedJump);
+        int16_t off = read_i16_le(ip);
+        ip += 2;
         const v4_u8 *tgt = ip + off;
         if (tgt < bc || tgt > ip_end)
           return static_cast<v4_err>(Err::JumpOutOfRange);
         ip = tgt;
+        break;
       }
-      break;
-    }
-    case Op::JNZ:
-    {
-      if (ip + 2 > ip_end)
-        return static_cast<v4_err>(Err::TruncatedJump);
-      int16_t off = read_i16_le(ip);
-      ip += 2;
-      v4_i32 cond = ds_pop(vm);
-      if (cond != 0)
+      case Op::JZ:
       {
-        const v4_u8 *tgt = ip + off;
-        if (tgt < bc || tgt > ip_end)
-          return static_cast<v4_err>(Err::JumpOutOfRange);
-        ip = tgt;
+        if (ip + 2 > ip_end)
+          return static_cast<v4_err>(Err::TruncatedJump);
+        int16_t off = read_i16_le(ip);
+        ip += 2;
+        v4_i32 cond = ds_pop(vm);
+        if (cond == 0)
+        {
+          const v4_u8 *tgt = ip + off;
+          if (tgt < bc || tgt > ip_end)
+            return static_cast<v4_err>(Err::JumpOutOfRange);
+          ip = tgt;
+        }
+        break;
       }
-      break;
-    }
+      case Op::JNZ:
+      {
+        if (ip + 2 > ip_end)
+          return static_cast<v4_err>(Err::TruncatedJump);
+        int16_t off = read_i16_le(ip);
+        ip += 2;
+        v4_i32 cond = ds_pop(vm);
+        if (cond != 0)
+        {
+          const v4_u8 *tgt = ip + off;
+          if (tgt < bc || tgt > ip_end)
+            return static_cast<v4_err>(Err::JumpOutOfRange);
+          ip = tgt;
+        }
+        break;
+      }
 
-    /* -------- Memory (32-bit, little-endian) -------- */
-    case Op::LOAD: /* ( addr -- x ) */
-    {
-      v4_u32 addr = (v4_u32)ds_pop(vm);
-      v4_u32 val = 0;
-      if (v4_err e = v4_mem_read32_core(vm, addr, &val))
-        return e;
-      ds_push(vm, (v4_i32)val);
-      break;
-    }
+      /* -------- Memory (32-bit, little-endian) -------- */
+      case Op::LOAD: /* ( addr -- x ) */
+      {
+        v4_u32 addr = (v4_u32)ds_pop(vm);
+        v4_u32 val = 0;
+        if (v4_err e = v4_mem_read32_core(vm, addr, &val))
+          return e;
+        ds_push(vm, (v4_i32)val);
+        break;
+      }
 
-    case Op::STORE: /* ( x addr -- ) */
-    {
-      v4_u32 addr = (v4_u32)ds_pop(vm); // top = addr
-      v4_u32 val = (v4_u32)ds_pop(vm);  // next = x
-      if (v4_err e = v4_mem_write32_core(vm, addr, val))
-        return e;
-      break;
-    }
+      case Op::STORE: /* ( x addr -- ) */
+      {
+        v4_u32 addr = (v4_u32)ds_pop(vm);  // top = addr
+        v4_u32 val = (v4_u32)ds_pop(vm);   // next = x
+        if (v4_err e = v4_mem_write32_core(vm, addr, val))
+          return e;
+        break;
+      }
 
-    /* -------- Return -------- */
-    case Op::RET:
-      return static_cast<v4_err>(Err::OK);
+      /* -------- Return -------- */
+      case Op::RET:
+        return static_cast<v4_err>(Err::OK);
 
-    default:
-      return static_cast<v4_err>(Err::UnknownOp);
+      default:
+        return static_cast<v4_err>(Err::UnknownOp);
     }
   }
 
