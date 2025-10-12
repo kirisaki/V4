@@ -24,25 +24,31 @@ extern "C" void vm_reset(Vm *vm)
 
 /* ========================== Data stack helpers =========================== */
 
-static inline void ds_push(Vm *vm, int32_t v)
+static inline int32_t ds_push(Vm *vm, int32_t v)
 {
-  assert(vm->sp < vm->DS + 256 && "Data stack overflow");
+  if (vm->sp > vm->DS + 256)
+    return static_cast<v4_err>(Err::StackOverflow);
   *vm->sp++ = v;
+  return 0;
 }
 static inline int32_t ds_pop(Vm *vm)
 {
-  assert(vm->sp > vm->DS && "Data stack underflow");
+  if (vm->sp < vm->DS)
+    return static_cast<v4_err>(Err::StackUnderflow);
   return *--vm->sp;
 }
 static inline int32_t ds_peek(const Vm *vm, int i = 0)
 {
-  assert(vm->sp - 1 - i >= vm->DS && "Data stack peek underflow");
+  if (vm->sp - 1 - i > vm->DS)
+    return static_cast<v4_err>(Err::StackUnderflow);
   return *(vm->sp - 1 - i);
 }
-static inline void ds_poke(Vm *vm, int i, int32_t v)
+static inline int32_t ds_poke(Vm *vm, int i, int32_t v)
 {
-  assert(vm->sp - 1 - i >= vm->DS && "Data stack poke underflow");
+  if (vm->sp - 1 - i < vm->DS)
+    return static_cast<v4_err>(Err::StackUnderflow);
   *(vm->sp - 1 - i) = v;
+  return 0;
 }
 
 /* ===================== Little-endian readers/writers ===================== */
