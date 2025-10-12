@@ -16,7 +16,7 @@ target_compile_options(v4vm PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -Os)
 add_executable(v4repl tools/v4repl.cpp)
 target_link_libraries(v4repl PRIVATE v4vm)
 
-# ---- Tests----
+# ---- Tests
 option(V4_BUILD_TESTS "Build unit tests" ON)
 
 if(V4_BUILD_TESTS)
