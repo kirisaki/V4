@@ -22,5 +22,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - C and C++ public API
 - Comprehensive test suite with doctest
 
-[unreleased]: https://github.com/YOUR_USERNAME/V4/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/YOUR_USERNAME/V4/releases/tag/v0.1.0
+[unreleased]: https://github.com/kirisaki/V4/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/kirisaki/V4/releases/tag/v0.1.0
