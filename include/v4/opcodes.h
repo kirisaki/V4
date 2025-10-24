@@ -15,7 +15,7 @@ extern "C"
 
   typedef enum v4_op_t
   {
-#define OP(name, val) V4_OP_##name = val,
+#define OP(name, val, _) V4_OP_##name = val,
 #include <v4/opcodes.def>
 #undef OP
   } v4_op_t;
