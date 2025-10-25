@@ -1,43 +1,43 @@
 // Stack operations
-OP(LIT   , 0x00, PRIM)
-OP(DUP   , 0x01, PRIM)
-OP(DROP  , 0x02, PRIM)
-OP(SWAP  , 0x03, PRIM)
-OP(OVER  , 0x04, PRIM)
+OP(LIT   , 0x00, IMM16)   // LIT imm16
+OP(DUP   , 0x01, NO_IMM)
+OP(DROP  , 0x02, NO_IMM)
+OP(SWAP  , 0x03, NO_IMM)
+OP(OVER  , 0x04, NO_IMM)
 
 // Arithmetic operations
-OP(ADD   , 0x10, PRIM)
-OP(SUB   , 0x11, PRIM)
-OP(MUL   , 0x12, PRIM)
-OP(DIV   , 0x13, PRIM)
-OP(MOD   , 0x14, PRIM)
+OP(ADD   , 0x10, NO_IMM)
+OP(SUB   , 0x11, NO_IMM)
+OP(MUL   , 0x12, NO_IMM)
+OP(DIV   , 0x13, NO_IMM)
+OP(MOD   , 0x14, NO_IMM)
 
 // Comparison (signed, Forth-style true = -1)
-OP(EQ    , 0x20, PRIM)
-OP(NE    , 0x21, PRIM)
-OP(LT    , 0x22, PRIM)
-OP(LE    , 0x23, PRIM)
-OP(GT    , 0x24, PRIM)
-OP(GE    , 0x25, PRIM)
+OP(EQ    , 0x20, NO_IMM)
+OP(NE    , 0x21, NO_IMM)
+OP(LT    , 0x22, NO_IMM)
+OP(LE    , 0x23, NO_IMM)
+OP(GT    , 0x24, NO_IMM)
+OP(GE    , 0x25, NO_IMM)
 
 // Logical / bitwise operations
-OP(AND   , 0x28, PRIM)
-OP(OR    , 0x29, PRIM)
-OP(XOR   , 0x2A, PRIM)
-OP(INVERT, 0x2B, PRIM)
+OP(AND   , 0x28, NO_IMM)
+OP(OR    , 0x29, NO_IMM)
+OP(XOR   , 0x2A, NO_IMM)
+OP(INVERT, 0x2B, NO_IMM)
 
 // Memory access (32-bit, little-endian)
-OP(LOAD  , 0x30, PRIM)
-OP(STORE , 0x31, PRIM)
+OP(LOAD  , 0x30, NO_IMM)
+OP(STORE , 0x31, NO_IMM)
 
 // Control flow (compiled by Front)
-OP(JMP   , 0x40, CTRL)
-OP(JZ    , 0x41, CTRL)
-OP(JNZ   , 0x42, CTRL)
+OP(JMP   , 0x40, REL16)   // JMP off16 (signed byte offset)
+OP(JZ    , 0x41, REL16)   // JZ off16
+OP(JNZ   , 0x42, REL16)   // JNZ off16
 
 // Call / return
-OP(CALL  , 0x50, CTRL)
-OP(RET   , 0x51, CTRL)
+OP(CALL  , 0x50, IDX16)   // CALL idx16 (word index)
+OP(RET   , 0x51, NO_IMM)
 
 // System hook (reserved; optional sugar like EMIT/KEY/millis)
-OP(SYS   , 0x60, PRIM_SYS)
+OP(SYS   , 0x60, IMM8)    // SYS id8
