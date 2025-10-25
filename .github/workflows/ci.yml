@@ -25,15 +25,8 @@ jobs:
       uses: lukka/get-cmake@latest
       
     - name: Configure CMake
-      shell: bash
       run: |
-        if [[ "${{ matrix.os }}" == "windows-latest" && "${{ matrix.build_type }}" == "Debug" ]]; then
-          # Windows Debugビルド: /O1と/RTC1の競合を回避するため/RTCを無効化
-          cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DV4_BUILD_TESTS=ON \
-            -DCMAKE_CXX_FLAGS_DEBUG="/MDd /Zi /Ob0 /Od"
-        else
-          cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DV4_BUILD_TESTS=ON
-        fi
+        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DV4_BUILD_TESTS=ON
         
     - name: Build
       run: cmake --build build --config ${{ matrix.build_type }} -j

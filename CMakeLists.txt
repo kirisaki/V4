@@ -9,7 +9,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(v4vm STATIC src/core.cpp src/memory.cpp)
 target_include_directories(v4vm PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(v4vm PRIVATE ${PROJECT_SOURCE_DIR}/include/v4/internal)
-target_compile_options(v4vm PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -Os)
+
+if(MSVC)
+  target_compile_options(v4vm PRIVATE /W4 /GR- /EHs-c- /O1)
+else()
+  target_compile_options(v4vm PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -Os)
+endif()
 
 # ---- Tools
 add_executable(v4repl tools/v4repl.cpp)
@@ -38,12 +43,6 @@ if(V4_BUILD_TESTS)
   target_include_directories(test_vm_c PRIVATE ${PROJECT_SOURCE_DIR}/include)
   target_link_libraries(test_vm_c PRIVATE v4vm)
   set_target_properties(test_vm_c PROPERTIES LINKER_LANGUAGE CXX)
-
-  if(MSVC)
-    target_compile_options(v4vm PRIVATE /W4 /GR- /EHs-c- /O1)
-  else()
-    target_compile_options(v4vm PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -Os)
-  endif()
   add_test(NAME test_vm_c COMMAND test_vm_c)
 
 endif()
