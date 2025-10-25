@@ -11,7 +11,11 @@ target_include_directories(v4vm PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(v4vm PRIVATE ${PROJECT_SOURCE_DIR}/include/v4/internal)
 
 if(MSVC)
-  target_compile_options(v4vm PRIVATE /W4 /GR- /EHs-c- /O1)
+  target_compile_options(v4vm PRIVATE /W4 /GR- /EHs-c-)
+  # Debug: without optimization
+  target_compile_options(v4vm PRIVATE $<$<CONFIG:Debug>:/Od>)
+  # Release: with optimization
+  target_compile_options(v4vm PRIVATE $<$<CONFIG:Release>:/O1>)
 else()
   target_compile_options(v4vm PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -Os)
 endif()
