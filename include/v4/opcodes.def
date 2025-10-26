@@ -41,3 +41,8 @@ OP(RET   , 0x51, NO_IMM)
 
 // System hook (reserved; optional sugar like EMIT/KEY/millis)
 OP(SYS   , 0x60, IMM8)    // SYS id8
+
+// Return stack operations
+OP(TOR   , 0x70, NO_IMM)
+OP(FROMR , 0x71, NO_IMM)
+OP(RFETCH, 0x72, NO_IMM)
