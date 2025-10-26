@@ -1,5 +1,5 @@
 // Stack operations
-OP(LIT   , 0x00, IMM16)   // LIT imm16
+OP(LIT   , 0x00, IMM32)   // LIT imm32
 OP(DUP   , 0x01, NO_IMM)
 OP(DROP  , 0x02, NO_IMM)
 OP(SWAP  , 0x03, NO_IMM)

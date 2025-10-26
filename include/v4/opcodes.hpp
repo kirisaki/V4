@@ -19,7 +19,7 @@ enum class PrimKind : uint8_t
 {
   NoImm,  // e.g., DUP, ADD, RET
   Imm8,   // SYS id8
-  Imm16,  // LIT imm16
+  Imm32,  // LIT imm32
   Rel16,  // JMP/JZ/JNZ off16 (signed, byte offset, next-PC based)
   Idx16,  // CALL idx16 (word index)
 };
@@ -39,7 +39,7 @@ struct PrimitiveEntry
 // -----------------------------------------------------------------------------
 #define PRIM_KIND_NO_IMM PrimKind::NoImm
 #define PRIM_KIND_IMM8 PrimKind::Imm8
-#define PRIM_KIND_IMM16 PrimKind::Imm16
+#define PRIM_KIND_IMM32 PrimKind::Imm32
 #define PRIM_KIND_REL16 PrimKind::Rel16
 #define PRIM_KIND_IDX16 PrimKind::Idx16
 
