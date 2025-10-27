@@ -142,6 +142,17 @@ extern "C" void vm_destroy(struct Vm *vm)
 {
   if (!vm)
     return;
+
+  // Free all word names allocated by vm_register_word
+  for (int i = 0; i < vm->word_count; i++)
+  {
+    if (vm->words[i].name)
+    {
+      ::free(vm->words[i].name);
+      vm->words[i].name = nullptr;
+    }
+  }
+
   ::free(vm);
 }
 

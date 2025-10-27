@@ -705,3 +705,33 @@ TEST_CASE("CALL instruction - named word execution")
 
   vm_reset(&vm);  // Free allocated name
 }
+TEST_CASE("vm_destroy - frees word names (memory leak test)")
+{
+  // This test verifies that vm_destroy properly frees word names
+  // allocated by vm_register_word. Under AddressSanitizer, this would
+  // fail if word names are not freed.
+
+  uint8_t ram[64] = {0};
+  VmConfig cfg = {ram, sizeof(ram), nullptr, 0};
+  struct Vm* vm = vm_create(&cfg);
+  REQUIRE(vm != nullptr);
+
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)Op::RET);
+
+  // Register multiple words with names - these will be strdup'd
+  int idx1 = vm_register_word(vm, "WORD1", code, k);
+  int idx2 = vm_register_word(vm, "WORD2", code, k);
+  int idx3 = vm_register_word(vm, "WORD3", code, k);
+
+  REQUIRE(idx1 >= 0);
+  REQUIRE(idx2 >= 0);
+  REQUIRE(idx3 >= 0);
+
+  // vm_destroy must free all the strdup'd names
+  vm_destroy(vm);
+
+  // If vm_destroy doesn't free the names, AddressSanitizer will report:
+  // "Direct leak of N byte(s) in M object(s) allocated from strdup"
+}
