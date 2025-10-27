@@ -41,6 +41,11 @@ if(V4_BUILD_TESTS)
   target_include_directories(test_return_stack PRIVATE tests/vendor/doctest)
   add_test(NAME test_return_stack COMMAND test_return_stack)
 
+  add_executable(test_call tests/test_call.cpp)
+  target_link_libraries(test_call PRIVATE v4vm)
+  target_include_directories(test_call PRIVATE tests/vendor/doctest)
+  add_test(NAME test_call COMMAND test_call)
+
   # Memory tests
   add_executable(test_memory tests/test_memory.cpp)
   target_link_libraries(test_memory PRIVATE v4vm)
