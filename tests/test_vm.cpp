@@ -666,3 +666,260 @@ TEST_CASE("Stack inspection - after complex operations")
   CHECK(vm_ds_depth_public(&vm) == 1);
   CHECK(vm_ds_peek_public(&vm, 0) == 100);
 }
+/* ------------------------------------------------------------------------- */
+/* REPL support: Stack manipulation API tests                                */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("Stack manipulation - vm_ds_push and vm_ds_pop")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Push values
+  CHECK(vm_ds_push(&vm, 10) == 0);
+  CHECK(vm_ds_push(&vm, 20) == 0);
+  CHECK(vm_ds_push(&vm, 30) == 0);
+  CHECK(vm_ds_depth_public(&vm) == 3);
+
+  // Pop values
+  v4_i32 val;
+  CHECK(vm_ds_pop(&vm, &val) == 0);
+  CHECK(val == 30);
+  CHECK(vm_ds_pop(&vm, &val) == 0);
+  CHECK(val == 20);
+  CHECK(vm_ds_depth_public(&vm) == 1);
+
+  // Pop without output pointer
+  CHECK(vm_ds_pop(&vm, nullptr) == 0);
+  CHECK(vm_ds_depth_public(&vm) == 0);
+}
+
+TEST_CASE("Stack manipulation - vm_ds_clear")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  vm_ds_push(&vm, 1);
+  vm_ds_push(&vm, 2);
+  vm_ds_push(&vm, 3);
+  CHECK(vm_ds_depth_public(&vm) == 3);
+
+  vm_ds_clear(&vm);
+  CHECK(vm_ds_depth_public(&vm) == 0);
+}
+
+TEST_CASE("Stack manipulation - error handling")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Stack underflow
+  v4_i32 val;
+  CHECK(vm_ds_pop(&vm, &val) != 0);
+
+  // NULL vm
+  CHECK(vm_ds_push(nullptr, 42) != 0);
+  CHECK(vm_ds_pop(nullptr, &val) != 0);
+}
+
+TEST_CASE("Stack snapshot and restore - basic")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Setup initial stack
+  vm_ds_push(&vm, 10);
+  vm_ds_push(&vm, 20);
+  vm_ds_push(&vm, 30);
+
+  // Create snapshot
+  VmStackSnapshot* snap = vm_ds_snapshot(&vm);
+  REQUIRE(snap != nullptr);
+  REQUIRE(snap->depth == 3);
+  REQUIRE(snap->data != nullptr);
+
+  // Modify stack
+  vm_ds_clear(&vm);
+  vm_ds_push(&vm, 999);
+  CHECK(vm_ds_depth_public(&vm) == 1);
+
+  // Restore from snapshot
+  CHECK(vm_ds_restore(&vm, snap) == 0);
+  CHECK(vm_ds_depth_public(&vm) == 3);
+  CHECK(vm_ds_peek_public(&vm, 0) == 30);
+  CHECK(vm_ds_peek_public(&vm, 1) == 20);
+  CHECK(vm_ds_peek_public(&vm, 2) == 10);
+
+  vm_ds_snapshot_free(snap);
+}
+
+TEST_CASE("Stack snapshot - empty stack")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Snapshot empty stack
+  VmStackSnapshot* snap = vm_ds_snapshot(&vm);
+  REQUIRE(snap != nullptr);
+  REQUIRE(snap->depth == 0);
+
+  // Push values then restore empty snapshot
+  vm_ds_push(&vm, 42);
+  CHECK(vm_ds_depth_public(&vm) == 1);
+
+  CHECK(vm_ds_restore(&vm, snap) == 0);
+  CHECK(vm_ds_depth_public(&vm) == 0);
+
+  vm_ds_snapshot_free(snap);
+}
+
+TEST_CASE("Stack snapshot - NULL safety")
+{
+  // NULL snapshot free (should not crash)
+  vm_ds_snapshot_free(nullptr);
+
+  // NULL vm snapshot
+  CHECK(vm_ds_snapshot(nullptr) == nullptr);
+
+  // NULL restore
+  Vm vm{};
+  vm_reset(&vm);
+  CHECK(vm_ds_restore(nullptr, nullptr) != 0);
+  CHECK(vm_ds_restore(&vm, nullptr) != 0);
+}
+
+/* ------------------------------------------------------------------------- */
+/* REPL support: Selective reset API tests                                  */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("Selective reset - vm_reset_dictionary preserves stacks")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Register words and push values
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  vm_register_word(&vm, "WORD1", code, k);
+  vm_register_word(&vm, "WORD2", code, k);
+  vm_ds_push(&vm, 42);
+  vm_ds_push(&vm, 100);
+
+  CHECK(vm.word_count == 2);
+  CHECK(vm_ds_depth_public(&vm) == 2);
+
+  // Reset dictionary only
+  vm_reset_dictionary(&vm);
+
+  // Stack should be preserved
+  CHECK(vm_ds_depth_public(&vm) == 2);
+  CHECK(vm_ds_peek_public(&vm, 0) == 100);
+  CHECK(vm_ds_peek_public(&vm, 1) == 42);
+
+  // Words should be cleared
+  CHECK(vm.word_count == 0);
+}
+
+TEST_CASE("Selective reset - vm_reset_stacks preserves dictionary")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Register words and push values
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  vm_register_word(&vm, "WORD1", code, k);
+  vm_ds_push(&vm, 42);
+  vm_ds_push(&vm, 100);
+
+  CHECK(vm.word_count == 1);
+  CHECK(vm_ds_depth_public(&vm) == 2);
+
+  // Reset stacks only
+  vm_reset_stacks(&vm);
+
+  // Stacks should be cleared
+  CHECK(vm_ds_depth_public(&vm) == 0);
+
+  // Dictionary should be preserved
+  CHECK(vm.word_count == 1);
+}
+
+TEST_CASE("Selective reset - vm_reset clears everything")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Register words and push values
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  vm_register_word(&vm, "WORD1", code, k);
+  vm_ds_push(&vm, 42);
+
+  // Full reset
+  vm_reset(&vm);
+
+  // Everything should be cleared
+  CHECK(vm_ds_depth_public(&vm) == 0);
+  CHECK(vm.word_count == 0);
+}
+
+TEST_CASE("REPL use case - preserve stack across word definition")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // User evaluates: "1 2 +" (result: 3)
+  vm_ds_push(&vm, 3);
+  CHECK(vm_ds_depth_public(&vm) == 1);
+
+  // User evaluates: "10 20 +" (result: 30)
+  vm_ds_push(&vm, 30);
+  CHECK(vm_ds_depth_public(&vm) == 2);
+
+  // User defines: ": SQUARE DUP * ;"
+  // REPL needs to reset dictionary but preserve stack
+  VmStackSnapshot* snap = vm_ds_snapshot(&vm);
+  vm_reset_dictionary(&vm);
+  vm_ds_restore(&vm, snap);
+  vm_ds_snapshot_free(snap);
+
+  // Stack should still have [3, 30]
+  CHECK(vm_ds_depth_public(&vm) == 2);
+  CHECK(vm_ds_peek_public(&vm, 1) == 3);
+  CHECK(vm_ds_peek_public(&vm, 0) == 30);
+
+  // Dictionary is clear for new word
+  CHECK(vm.word_count == 0);
+
+  // Now register SQUARE
+  v4_u8 square_code[16];
+  int k = 0;
+  emit8(square_code, &k, (v4_u8)v4::Op::DUP);
+  emit8(square_code, &k, (v4_u8)v4::Op::MUL);
+  emit8(square_code, &k, (v4_u8)v4::Op::RET);
+
+  vm_register_word(&vm, "SQUARE", square_code, k);
+  CHECK(vm.word_count == 1);
+
+  // Execute "5 SQUARE"
+  vm_ds_push(&vm, 5);
+  v4_u8 call_code[16];
+  k = 0;
+  emit8(call_code, &k, (v4_u8)v4::Op::CALL);
+  emit8(call_code, &k, 0);  // Word index 0
+  emit8(call_code, &k, 0);
+  emit8(call_code, &k, (v4_u8)v4::Op::RET);
+
+  vm_exec_raw(&vm, call_code, k);
+
+  // Stack should be [3, 30, 25]
+  CHECK(vm_ds_depth_public(&vm) == 3);
+  CHECK(vm_ds_peek_public(&vm, 2) == 3);
+  CHECK(vm_ds_peek_public(&vm, 1) == 30);
+  CHECK(vm_ds_peek_public(&vm, 0) == 25);
+}

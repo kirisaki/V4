@@ -15,9 +15,12 @@ extern "C" int v4_vm_version(void)
   return 0;
 }
 
-extern "C" void vm_reset(Vm* vm)
+extern "C" void vm_reset_dictionary(Vm* vm)
 {
-  // Free all word names before resetting
+  if (!vm)
+    return;
+
+  // Free all word names and clear dictionary
   for (int i = 0; i < vm->word_count; i++)
   {
     if (vm->words[i].name)
@@ -26,11 +29,27 @@ extern "C" void vm_reset(Vm* vm)
       vm->words[i].name = nullptr;
     }
   }
+  vm->word_count = 0;
+}
 
-  // Reset data/return stacks to initial positions.
+extern "C" void vm_reset_stacks(Vm* vm)
+{
+  if (!vm)
+    return;
+
+  // Reset data/return stacks to initial positions
   vm->sp = vm->DS;
   vm->rp = vm->RS;
-  vm->word_count = 0;
+}
+
+extern "C" void vm_reset(Vm* vm)
+{
+  if (!vm)
+    return;
+
+  // Reset dictionary and stacks
+  vm_reset_dictionary(vm);
+  vm_reset_stacks(vm);
 }
 
 /* ========================== Data stack helpers =========================== */
@@ -571,4 +590,102 @@ extern "C" v4_i32 vm_ds_peek_public(struct Vm* vm, int index_from_top)
     return 0;  // Out of range
 
   return vm->sp[-1 - index_from_top];
+}
+/* ===================== Stack manipulation API ============================ */
+
+extern "C" v4_err vm_ds_push(struct Vm* vm, v4_i32 value)
+{
+  if (!vm)
+    return static_cast<v4_err>(Err::InvalidArg);
+  return ds_push(vm, value);
+}
+
+extern "C" v4_err vm_ds_pop(struct Vm* vm, v4_i32* out_value)
+{
+  if (!vm)
+    return static_cast<v4_err>(Err::InvalidArg);
+
+  v4_i32 val;
+  v4_err err = ds_pop(vm, &val);
+  if (err == 0 && out_value)
+    *out_value = val;
+  return err;
+}
+
+extern "C" void vm_ds_clear(struct Vm* vm)
+{
+  if (!vm)
+    return;
+  vm->sp = vm->DS;
+}
+
+/* ==================== Stack snapshot API ================================= */
+
+extern "C" struct VmStackSnapshot* vm_ds_snapshot(struct Vm* vm)
+{
+  if (!vm)
+    return nullptr;
+
+  int depth = (int)(vm->sp - vm->DS);
+  if (depth == 0)
+  {
+    // Empty stack - return snapshot with NULL data
+    VmStackSnapshot* snap =
+        (VmStackSnapshot*)malloc(sizeof(VmStackSnapshot));
+    if (!snap)
+      return nullptr;
+    snap->data = nullptr;
+    snap->depth = 0;
+    return snap;
+  }
+
+  VmStackSnapshot* snap = (VmStackSnapshot*)malloc(sizeof(VmStackSnapshot));
+  if (!snap)
+    return nullptr;
+
+  snap->data = (v4_i32*)malloc(depth * sizeof(v4_i32));
+  if (!snap->data)
+  {
+    free(snap);
+    return nullptr;
+  }
+
+  // Copy stack contents (bottom to top)
+  memcpy(snap->data, vm->DS, depth * sizeof(v4_i32));
+  snap->depth = depth;
+
+  return snap;
+}
+
+extern "C" v4_err vm_ds_restore(struct Vm* vm,
+                                const struct VmStackSnapshot* snapshot)
+{
+  if (!vm || !snapshot)
+    return static_cast<v4_err>(Err::InvalidArg);
+
+  // Check if restored stack would fit
+  if (snapshot->depth > 256)
+    return static_cast<v4_err>(Err::StackOverflow);
+
+  // Clear current stack
+  vm->sp = vm->DS;
+
+  // Restore from snapshot (bottom to top)
+  if (snapshot->depth > 0 && snapshot->data)
+  {
+    memcpy(vm->DS, snapshot->data, snapshot->depth * sizeof(v4_i32));
+    vm->sp = vm->DS + snapshot->depth;
+  }
+
+  return static_cast<v4_err>(Err::OK);
+}
+
+extern "C" void vm_ds_snapshot_free(struct VmStackSnapshot* snapshot)
+{
+  if (!snapshot)
+    return;
+
+  if (snapshot->data)
+    free(snapshot->data);
+  free(snapshot);
 }

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- REPL support APIs for interactive programming:
+  - vm_reset_dictionary: Reset word dictionary while preserving stacks
+  - vm_reset_stacks: Reset stacks while preserving dictionary
+  - vm_ds_push, vm_ds_pop, vm_ds_clear: Direct stack manipulation APIs
+  - vm_ds_snapshot, vm_ds_restore, vm_ds_snapshot_free: Stack snapshot/restore for preserving state across VM operations
+- Comprehensive test coverage for all new REPL APIs
+
+### Changed
+- vm_reset now implemented as vm_reset_dictionary + vm_reset_stacks for better modularity
+
 ## [0.2.1] - 2025-10-27
 
 ### Fixed

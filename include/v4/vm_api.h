@@ -81,6 +81,7 @@ extern "C"
   /* Forward declarations for opaque VM and Word structures. */
   struct Vm;
   struct Word;
+  struct VmStackSnapshot;
 
 /* ------------------------------------------------------------------------- */
 /* Boolean constants (Forth-style truth values)                              */
@@ -111,6 +112,19 @@ extern "C"
    * @param vm     VM instance.
    */
   void vm_reset(struct Vm *vm);
+
+  /**
+   * @brief Reset only the word dictionary, preserving stacks and memory.
+   * @param vm     VM instance.
+   */
+  void vm_reset_dictionary(struct Vm *vm);
+
+  /**
+   * @brief Reset only the data and return stacks, preserving dictionary and
+   * memory.
+   * @param vm     VM instance.
+   */
+  void vm_reset_stacks(struct Vm *vm);
 
   /**
    * @brief Destroy a VM instance and free its resources.
@@ -203,6 +217,76 @@ extern "C"
    * @return Value at the given stack position, or 0 if out of range.
    */
   v4_i32 vm_ds_peek_public(struct Vm *vm, int index_from_top);
+
+  /* ------------------------------------------------------------------------- */
+  /* Stack manipulation (for REPL and advanced use cases)                      */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Push a value onto the data stack.
+   * @param vm     VM instance.
+   * @param value  Value to push.
+   * @return 0 on success, negative error code on stack overflow.
+   */
+  v4_err vm_ds_push(struct Vm *vm, v4_i32 value);
+
+  /**
+   * @brief Pop a value from the data stack.
+   * @param vm         VM instance.
+   * @param out_value  Output pointer for popped value (can be NULL).
+   * @return 0 on success, negative error code on stack underflow.
+   */
+  v4_err vm_ds_pop(struct Vm *vm, v4_i32 *out_value);
+
+  /**
+   * @brief Clear the data stack.
+   * @param vm  VM instance.
+   */
+  void vm_ds_clear(struct Vm *vm);
+
+  /* ------------------------------------------------------------------------- */
+  /* Stack snapshot (for preserving stack across VM resets)                    */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Stack snapshot structure.
+   *
+   * Contains a copy of the data stack contents at a point in time.
+   * Created by vm_ds_snapshot() and freed by vm_ds_snapshot_free().
+   */
+  typedef struct VmStackSnapshot
+  {
+    v4_i32 *data; /**< Stack data (dynamically allocated) */
+    int depth;    /**< Stack depth */
+  } VmStackSnapshot;
+
+  /**
+   * @brief Create a snapshot of the current data stack.
+   *
+   * Allocates memory to store a copy of the stack contents.
+   * Must be freed with vm_ds_snapshot_free().
+   *
+   * @param vm  VM instance.
+   * @return Pointer to snapshot, or NULL on allocation failure.
+   */
+  struct VmStackSnapshot *vm_ds_snapshot(struct Vm *vm);
+
+  /**
+   * @brief Restore the data stack from a snapshot.
+   *
+   * Clears the current stack and replaces it with the snapshot contents.
+   *
+   * @param vm        VM instance.
+   * @param snapshot  Snapshot to restore from.
+   * @return 0 on success, negative error code on failure.
+   */
+  v4_err vm_ds_restore(struct Vm *vm, const struct VmStackSnapshot *snapshot);
+
+  /**
+   * @brief Free a stack snapshot.
+   * @param snapshot  Snapshot to free (NULL-safe).
+   */
+  void vm_ds_snapshot_free(struct VmStackSnapshot *snapshot);
 
   /* ------------------------------------------------------------------------- */
   /* Version and error handling                                                */
