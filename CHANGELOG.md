@@ -6,15 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Added return stack
-- Fixed stack helpers to return error correctly
-- Added word dictionary and CALL opcode support
-- Added new error types (InvalidArg, DictionaryFull, InvalidWordIdx)
-- Implemented vm_register_word and vm_get_word API functions
-- Implemented vm_exec function
-- Added name field to Word structure for debugging and REPL support
-- Extended vm_register_word API to accept optional word names
-- Implemented vm_ds_depth_public and vm_ds_peek_public APIs for stack inspection
+
+## [0.2.0] - 2025-10-27
+
+### Added
+- Return stack operations (TOR, FROMR, RFETCH)
+- Word dictionary and CALL opcode for function calls
+- New error types: InvalidArg, DictionaryFull, InvalidWordIdx
+- vm_register_word and vm_get_word API functions
+- vm_exec function for executing word entries
+- Word name field for debugging and REPL support
+- Stack inspection APIs: vm_ds_depth_public and vm_ds_peek_public
+
+### Changed
+- **BREAKING**: vm_register_word now accepts optional name parameter
+- **BREAKING**: Word structure now includes name field
+- Fixed stack helpers to return errors correctly
 
 ## [0.1.3] - 2025-10-26
 - Fix bit length of literal number
@@ -41,5 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - C and C++ public API
 - Comprehensive test suite with doctest
 
-[unreleased]: https://github.com/kirisaki/V4/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/kirisaki/V4/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kirisaki/V4/compare/v0.1.3...v0.2.0
+[0.1.3]: https://github.com/kirisaki/V4/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/kirisaki/V4/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/kirisaki/V4/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/kirisaki/V4/releases/tag/v0.1.0
