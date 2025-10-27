@@ -45,7 +45,7 @@ TEST_CASE("vm_register_word - basic registration")
   emit32(word_code, &k, 42);
   emit8(word_code, &k, (v4_u8)Op::RET);
 
-  int idx = vm_register_word(&vm, word_code, k);
+  int idx = vm_register_word(&vm, nullptr, word_code, k);
   CHECK(idx == 0);  // First word should get index 0
   CHECK(vm.word_count == 1);
 }
@@ -76,9 +76,9 @@ TEST_CASE("vm_register_word - multiple words")
   emit32(word3, &k, 30);
   emit8(word3, &k, (v4_u8)Op::RET);
 
-  int idx1 = vm_register_word(&vm, word1, 6);
-  int idx2 = vm_register_word(&vm, word2, 6);
-  int idx3 = vm_register_word(&vm, word3, 6);
+  int idx1 = vm_register_word(&vm, nullptr, word1, 6);
+  int idx2 = vm_register_word(&vm, nullptr, word2, 6);
+  int idx3 = vm_register_word(&vm, nullptr, word3, 6);
 
   CHECK(idx1 == 0);
   CHECK(idx2 == 1);
@@ -96,14 +96,14 @@ TEST_CASE("vm_register_word - invalid arguments")
   emit8(code, &k, (v4_u8)Op::RET);
 
   // NULL vm
-  CHECK(vm_register_word(nullptr, code, k) == static_cast<int>(Err::InvalidArg));
+  CHECK(vm_register_word(nullptr, nullptr, code, k) == static_cast<int>(Err::InvalidArg));
 
   // NULL code
-  CHECK(vm_register_word(&vm, nullptr, k) == static_cast<int>(Err::InvalidArg));
+  CHECK(vm_register_word(&vm, nullptr, nullptr, k) == static_cast<int>(Err::InvalidArg));
 
   // Invalid length
-  CHECK(vm_register_word(&vm, code, 0) == static_cast<int>(Err::InvalidArg));
-  CHECK(vm_register_word(&vm, code, -1) == static_cast<int>(Err::InvalidArg));
+  CHECK(vm_register_word(&vm, nullptr, code, 0) == static_cast<int>(Err::InvalidArg));
+  CHECK(vm_register_word(&vm, nullptr, code, -1) == static_cast<int>(Err::InvalidArg));
 }
 
 TEST_CASE("vm_register_word - dictionary full")
@@ -118,12 +118,12 @@ TEST_CASE("vm_register_word - dictionary full")
   // Fill up the dictionary (max 256 words)
   for (int i = 0; i < 256; i++)
   {
-    int idx = vm_register_word(&vm, word_code, k);
+    int idx = vm_register_word(&vm, nullptr, word_code, k);
     CHECK(idx == i);
   }
 
   // Next registration should fail
-  int idx = vm_register_word(&vm, word_code, k);
+  int idx = vm_register_word(&vm, nullptr, word_code, k);
   CHECK(idx == static_cast<int>(Err::DictionaryFull));
   CHECK(vm.word_count == 256);
 }
@@ -142,7 +142,7 @@ TEST_CASE("vm_get_word - retrieve registered word")
   emit32(word_code, &k, 99);
   emit8(word_code, &k, (v4_u8)Op::RET);
 
-  int idx = vm_register_word(&vm, word_code, k);
+  int idx = vm_register_word(&vm, nullptr, word_code, k);
   REQUIRE(idx == 0);
 
   Word* word = vm_get_word(&vm, idx);
@@ -165,7 +165,7 @@ TEST_CASE("vm_get_word - invalid index")
   v4_u8 word_code[16];
   int k = 0;
   emit8(word_code, &k, (v4_u8)Op::RET);
-  vm_register_word(&vm, word_code, k);
+  vm_register_word(&vm, nullptr, word_code, k);
 
   // Valid index
   CHECK(vm_get_word(&vm, 0) != nullptr);
@@ -195,7 +195,7 @@ TEST_CASE("CALL instruction - basic word call")
   emit32(word_code, &wk, 42);
   emit8(word_code, &wk, (v4_u8)Op::RET);
 
-  int word_idx = vm_register_word(&vm, word_code, wk);
+  int word_idx = vm_register_word(&vm, nullptr, word_code, wk);
   REQUIRE(word_idx == 0);
 
   // Main code: CALL 0; RET
@@ -223,7 +223,7 @@ TEST_CASE("CALL instruction - word with arithmetic")
   emit8(word_code, &wk, (v4_u8)Op::ADD);
   emit8(word_code, &wk, (v4_u8)Op::RET);
 
-  int word_idx = vm_register_word(&vm, word_code, wk);
+  int word_idx = vm_register_word(&vm, nullptr, word_code, wk);
   REQUIRE(word_idx == 0);
 
   // Main code: LIT 21; CALL 0; RET
@@ -254,7 +254,7 @@ TEST_CASE("CALL instruction - multiple calls")
   emit8(word_code, &wk, (v4_u8)Op::ADD);
   emit8(word_code, &wk, (v4_u8)Op::RET);
 
-  int word_idx = vm_register_word(&vm, word_code, wk);
+  int word_idx = vm_register_word(&vm, nullptr, word_code, wk);
   REQUIRE(word_idx == 0);
 
   // Main code: LIT 5; CALL 0; CALL 0; CALL 0; RET
@@ -297,8 +297,8 @@ TEST_CASE("CALL instruction - calling multiple different words")
   emit8(word1, &k1, (v4_u8)Op::ADD);
   emit8(word1, &k1, (v4_u8)Op::RET);
 
-  int idx0 = vm_register_word(&vm, word0, k0);
-  int idx1 = vm_register_word(&vm, word1, k1);
+  int idx0 = vm_register_word(&vm, nullptr, word0, k0);
+  int idx1 = vm_register_word(&vm, nullptr, word1, k1);
   REQUIRE(idx0 == 0);
   REQUIRE(idx1 == 1);
 
@@ -333,7 +333,7 @@ TEST_CASE("CALL instruction - nested calls")
   emit8(word0, &k0, (v4_u8)Op::ADD);
   emit8(word0, &k0, (v4_u8)Op::RET);
 
-  int idx0 = vm_register_word(&vm, word0, k0);
+  int idx0 = vm_register_word(&vm, nullptr, word0, k0);
   REQUIRE(idx0 == 0);
 
   // Word 1 "add15": CALL 0; CALL 0; CALL 0; RET  (calls add5 three times)
@@ -347,7 +347,7 @@ TEST_CASE("CALL instruction - nested calls")
   emit16(word1, &k1, (uint16_t)idx0);
   emit8(word1, &k1, (v4_u8)Op::RET);
 
-  int idx1 = vm_register_word(&vm, word1, k1);
+  int idx1 = vm_register_word(&vm, nullptr, word1, k1);
   REQUIRE(idx1 == 1);
 
   // Main: LIT 10; CALL 1; RET
@@ -393,7 +393,7 @@ TEST_CASE("CALL instruction - out of bounds word index")
   emit8(word_code, &wk, (v4_u8)Op::LIT);
   emit32(word_code, &wk, 42);
   emit8(word_code, &wk, (v4_u8)Op::RET);
-  vm_register_word(&vm, word_code, wk);
+  vm_register_word(&vm, nullptr, word_code, wk);
 
   // Try to call word 5 (doesn't exist)
   v4_u8 main_code[16];
@@ -415,7 +415,7 @@ TEST_CASE("CALL instruction - truncated instruction")
   v4_u8 word_code[16];
   int wk = 0;
   emit8(word_code, &wk, (v4_u8)Op::RET);
-  vm_register_word(&vm, word_code, wk);
+  vm_register_word(&vm, nullptr, word_code, wk);
 
   // Main code with truncated CALL (missing 1 byte)
   v4_u8 main_code[16];
@@ -515,7 +515,7 @@ TEST_CASE("vm_exec - word calling other words")
   emit8(helper_code, &hk, (v4_u8)Op::ADD);
   emit8(helper_code, &hk, (v4_u8)Op::RET);
 
-  int helper_idx = vm_register_word(&vm, helper_code, hk);
+  int helper_idx = vm_register_word(&vm, nullptr, helper_code, hk);
   REQUIRE(helper_idx == 0);
 
   // Main word: LIT 5; CALL 0; CALL 0; RET
@@ -550,13 +550,150 @@ TEST_CASE("vm_reset clears word dictionary")
   int k = 0;
   emit8(word_code, &k, (v4_u8)Op::RET);
 
-  vm_register_word(&vm, word_code, k);
-  vm_register_word(&vm, word_code, k);
-  vm_register_word(&vm, word_code, k);
+  vm_register_word(&vm, nullptr, word_code, k);
+  vm_register_word(&vm, nullptr, word_code, k);
+  vm_register_word(&vm, nullptr, word_code, k);
 
   CHECK(vm.word_count == 3);
 
   // Reset should clear the dictionary
   vm_reset(&vm);
   CHECK(vm.word_count == 0);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Word name tests                                                           */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("vm_register_word - named word")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)Op::RET);
+
+  int idx = vm_register_word(&vm, "TEST", code, k);
+  REQUIRE(idx >= 0);
+  REQUIRE(vm.words[idx].name != nullptr);
+  CHECK(strcmp(vm.words[idx].name, "TEST") == 0);
+}
+
+TEST_CASE("vm_register_word - anonymous word (NULL name)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)Op::RET);
+
+  int idx = vm_register_word(&vm, nullptr, code, k);
+  REQUIRE(idx >= 0);
+  CHECK(vm.words[idx].name == nullptr);
+}
+
+TEST_CASE("vm_register_word - multiple named words")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  v4_u8 code1[16], code2[16], code3[16];
+  int k = 0;
+
+  emit8(code1, &k, (v4_u8)Op::RET);
+  emit8(code2, &k, (v4_u8)Op::RET);
+  emit8(code3, &k, (v4_u8)Op::RET);
+
+  int idx1 = vm_register_word(&vm, "DOUBLE", code1, k);
+  int idx2 = vm_register_word(&vm, "SQUARE", code2, k);
+  int idx3 = vm_register_word(&vm, nullptr, code3, k);  // anonymous
+
+  REQUIRE(idx1 >= 0);
+  REQUIRE(idx2 >= 0);
+  REQUIRE(idx3 >= 0);
+
+  CHECK(vm.words[idx1].name != nullptr);
+  CHECK(strcmp(vm.words[idx1].name, "DOUBLE") == 0);
+
+  CHECK(vm.words[idx2].name != nullptr);
+  CHECK(strcmp(vm.words[idx2].name, "SQUARE") == 0);
+
+  CHECK(vm.words[idx3].name == nullptr);
+}
+
+TEST_CASE("vm_reset - frees word names")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)Op::RET);
+
+  // Register words with names
+  vm_register_word(&vm, "WORD1", code, k);
+  vm_register_word(&vm, "WORD2", code, k);
+  vm_register_word(&vm, nullptr, code, k);  // anonymous
+
+  CHECK(vm.word_count == 3);
+
+  // Reset should free the names and clear the dictionary
+  vm_reset(&vm);
+  CHECK(vm.word_count == 0);
+}
+
+TEST_CASE("vm_register_word - name is copied (strdup)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)Op::RET);
+
+  char name_buffer[64];
+  strcpy(name_buffer, "ORIGINAL");
+
+  int idx = vm_register_word(&vm, name_buffer, code, k);
+  REQUIRE(idx >= 0);
+  REQUIRE(vm.words[idx].name != nullptr);
+  CHECK(strcmp(vm.words[idx].name, "ORIGINAL") == 0);
+
+  // Modify the original buffer - word name should be unchanged
+  strcpy(name_buffer, "MODIFIED");
+  CHECK(strcmp(vm.words[idx].name, "ORIGINAL") == 0);
+}
+
+TEST_CASE("CALL instruction - named word execution")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Word "ADD10": LIT 10; ADD; RET
+  v4_u8 word_code[16];
+  int wk = 0;
+  emit8(word_code, &wk, (v4_u8)Op::LIT);
+  emit32(word_code, &wk, 10);
+  emit8(word_code, &wk, (v4_u8)Op::ADD);
+  emit8(word_code, &wk, (v4_u8)Op::RET);
+
+  int word_idx = vm_register_word(&vm, "ADD10", word_code, wk);
+  REQUIRE(word_idx >= 0);
+  REQUIRE(vm.words[word_idx].name != nullptr);
+  CHECK(strcmp(vm.words[word_idx].name, "ADD10") == 0);
+
+  // Main code: LIT 5; CALL 0; RET
+  v4_u8 main_code[32];
+  int mk = 0;
+  emit8(main_code, &mk, (v4_u8)Op::LIT);
+  emit32(main_code, &mk, 5);
+  emit8(main_code, &mk, (v4_u8)Op::CALL);
+  emit16(main_code, &mk, (uint16_t)word_idx);
+  emit8(main_code, &mk, (v4_u8)Op::RET);
+
+  int rc = vm_exec_raw(&vm, main_code, mk);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 15);
 }

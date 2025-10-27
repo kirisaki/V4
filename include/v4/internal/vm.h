@@ -13,6 +13,7 @@ extern "C"
    */
   typedef struct Word
   {
+    char *name;          /**< Word name (dynamically allocated, can be NULL) */
     const uint8_t *code; /**< Bytecode pointer */
     int code_len;        /**< Length of bytecode in bytes */
   } Word;

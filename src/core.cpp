@@ -17,6 +17,16 @@ extern "C" int v4_vm_version(void)
 
 extern "C" void vm_reset(Vm* vm)
 {
+  // Free all word names before resetting
+  for (int i = 0; i < vm->word_count; i++)
+  {
+    if (vm->words[i].name)
+    {
+      free(vm->words[i].name);
+      vm->words[i].name = nullptr;
+    }
+  }
+
   // Reset data/return stacks to initial positions.
   vm->sp = vm->DS;
   vm->rp = vm->RS;
@@ -495,7 +505,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
 
 /* ======================= Word management API ============================= */
 
-extern "C" int vm_register_word(Vm* vm, const uint8_t* code, int code_len)
+extern "C" int vm_register_word(Vm* vm, const char* name, const uint8_t* code, int code_len)
 {
   if (!vm || !code || code_len <= 0)
     return static_cast<v4_err>(Err::InvalidArg);
@@ -504,6 +514,19 @@ extern "C" int vm_register_word(Vm* vm, const uint8_t* code, int code_len)
     return static_cast<v4_err>(Err::DictionaryFull);
 
   int idx = vm->word_count;
+
+  // Copy name if provided (NULL is allowed for anonymous words)
+  if (name)
+  {
+    vm->words[idx].name = strdup(name);
+    if (!vm->words[idx].name)
+      return static_cast<v4_err>(Err::InvalidArg);  // strdup failed (out of memory)
+  }
+  else
+  {
+    vm->words[idx].name = nullptr;
+  }
+
   vm->words[idx].code = code;
   vm->words[idx].code_len = code_len;
   vm->word_count++;
