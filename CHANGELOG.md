@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-10-27
+
+### Fixed
+- Memory leaks in test cases where word names were not properly freed
+- Critical: vm_destroy now properly frees word names allocated by vm_register_word
+
 ## [0.2.0] - 2025-10-27
 
 ### Added
@@ -48,7 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - C and C++ public API
 - Comprehensive test suite with doctest
 
-[unreleased]: https://github.com/kirisaki/V4/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/kirisaki/V4/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/kirisaki/V4/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/kirisaki/V4/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/kirisaki/V4/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/kirisaki/V4/compare/v0.1.1...v0.1.2
