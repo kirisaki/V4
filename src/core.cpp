@@ -505,7 +505,8 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
 
 /* ======================= Word management API ============================= */
 
-extern "C" int vm_register_word(Vm* vm, const char* name, const uint8_t* code, int code_len)
+extern "C" int vm_register_word(Vm* vm, const char* name, const uint8_t* code,
+                                int code_len)
 {
   if (!vm || !code || code_len <= 0)
     return static_cast<v4_err>(Err::InvalidArg);

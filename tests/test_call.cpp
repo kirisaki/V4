@@ -577,6 +577,8 @@ TEST_CASE("vm_register_word - named word")
   REQUIRE(idx >= 0);
   REQUIRE(vm.words[idx].name != nullptr);
   CHECK(strcmp(vm.words[idx].name, "TEST") == 0);
+
+  vm_reset(&vm);  // Free allocated name
 }
 
 TEST_CASE("vm_register_word - anonymous word (NULL name)")
@@ -620,6 +622,8 @@ TEST_CASE("vm_register_word - multiple named words")
   CHECK(strcmp(vm.words[idx2].name, "SQUARE") == 0);
 
   CHECK(vm.words[idx3].name == nullptr);
+
+  vm_reset(&vm);  // Free allocated names
 }
 
 TEST_CASE("vm_reset - frees word names")
@@ -663,6 +667,8 @@ TEST_CASE("vm_register_word - name is copied (strdup)")
   // Modify the original buffer - word name should be unchanged
   strcpy(name_buffer, "MODIFIED");
   CHECK(strcmp(vm.words[idx].name, "ORIGINAL") == 0);
+
+  vm_reset(&vm);  // Free allocated name
 }
 
 TEST_CASE("CALL instruction - named word execution")
@@ -696,4 +702,6 @@ TEST_CASE("CALL instruction - named word execution")
   CHECK(rc == 0);
   CHECK(vm.sp == vm.DS + 1);
   CHECK(vm.DS[0] == 15);
+
+  vm_reset(&vm);  // Free allocated name
 }

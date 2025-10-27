@@ -134,7 +134,8 @@ extern "C"
    * @param code_len  Length of bytecode in bytes.
    * @return Word index on success (>= 0), negative error code on failure.
    */
-  int vm_register_word(struct Vm *vm, const char *name, const uint8_t *code, int code_len);
+  int vm_register_word(struct Vm *vm, const char *name, const uint8_t *code,
+                       int code_len);
 
   /**
    * @brief Get a word by index from the VM's dictionary.
