@@ -9,6 +9,15 @@ extern "C"
 #endif
 
   /**
+   * @brief Word structure representing a compiled Forth word.
+   */
+  typedef struct Word
+  {
+    const uint8_t *code; /**< Bytecode pointer */
+    int code_len;        /**< Length of bytecode in bytes */
+  } Word;
+
+  /**
    * @brief Internal VM structure (not part of the public API).
    *        Visible only for unit tests or tightly coupled components.
    */
@@ -33,6 +42,14 @@ extern "C"
 
     /* Execution state */
     int last_err; /**< Last error code (0 = OK) */
+
+    /* Word dictionary (for CALL opcode) */
+    enum
+    {
+      V4_MAX_WORDS = 256
+    };
+    Word words[V4_MAX_WORDS]; /**< Word dictionary */
+    int word_count;           /**< Number of registered words */
 
     /* Reserved for future JIT / IC linkage */
     const VmConfig *boot_cfg_snapshot;

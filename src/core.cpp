@@ -20,6 +20,7 @@ extern "C" void vm_reset(Vm* vm)
   // Reset data/return stacks to initial positions.
   vm->sp = vm->DS;
   vm->rp = vm->RS;
+  vm->word_count = 0;
 }
 
 /* ========================== Data stack helpers =========================== */
@@ -460,7 +461,27 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         break;
       }
 
-      /* -------- Return -------- */
+      /* -------- Call / Return -------- */
+      case v4::Op::CALL:
+      {
+        if (ip + 2 > ip_end)
+          return static_cast<v4_err>(Err::TruncatedJump);
+        uint16_t word_idx = (uint16_t)ip[0] | ((uint16_t)ip[1] << 8);
+        ip += 2;
+
+        if (word_idx >= (uint16_t)vm->word_count)
+          return static_cast<v4_err>(Err::InvalidWordIdx);
+
+        Word* word = &vm->words[word_idx];
+        if (!word->code || word->code_len <= 0)
+          return static_cast<v4_err>(Err::InvalidArg);
+
+        // Execute the called word
+        if (v4_err e = vm_exec_raw(vm, word->code, word->code_len))
+          return e;
+        break;
+      }
+
       case v4::Op::RET:
         return static_cast<v4_err>(Err::OK);
 
@@ -472,11 +493,37 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
   return static_cast<v4_err>(Err::FellOffEnd);
 }
 
+/* ======================= Word management API ============================= */
+
+extern "C" int vm_register_word(Vm* vm, const uint8_t* code, int code_len)
+{
+  if (!vm || !code || code_len <= 0)
+    return static_cast<v4_err>(Err::InvalidArg);
+
+  if (vm->word_count >= Vm::V4_MAX_WORDS)
+    return static_cast<v4_err>(Err::DictionaryFull);
+
+  int idx = vm->word_count;
+  vm->words[idx].code = code;
+  vm->words[idx].code_len = code_len;
+  vm->word_count++;
+
+  return idx;
+}
+
+extern "C" Word* vm_get_word(Vm* vm, int idx)
+{
+  if (!vm || idx < 0 || idx >= vm->word_count)
+    return nullptr;
+  return &vm->words[idx];
+}
+
 /* =========================== Public API entry ============================ */
 
 extern "C" v4_err vm_exec(Vm* vm, Word* entry)
 {
-  (void)vm;
-  (void)entry;
-  return static_cast<v4_err>(Err::OK);
+  if (!vm || !entry || !entry->code)
+    return static_cast<v4_err>(Err::InvalidArg);
+
+  return vm_exec_raw(vm, entry->code, entry->code_len);
 }

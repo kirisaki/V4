@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Added return stack
 - Fixed stack helpers to return error correctly
+- Added word dictionary and CALL opcode support
+- Added new error types (InvalidArg, DictionaryFull, InvalidWordIdx)
+- Implemented vm_register_word and vm_get_word API functions
+- Implemented vm_exec function
 
 ## [0.1.3] - 2025-10-26
 - Fix bit length of literal number
