@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented vm_exec function
 - Added name field to Word structure for debugging and REPL support
 - Extended vm_register_word API to accept optional word names
+- Implemented vm_ds_depth_public and vm_ds_peek_public APIs for stack inspection
 
 ## [0.1.3] - 2025-10-26
 - Fix bit length of literal number

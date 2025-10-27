@@ -550,3 +550,24 @@ extern "C" v4_err vm_exec(Vm* vm, Word* entry)
 
   return vm_exec_raw(vm, entry->code, entry->code_len);
 }
+
+/* ======================= Stack inspection API ============================ */
+
+extern "C" int vm_ds_depth_public(struct Vm* vm)
+{
+  if (!vm)
+    return 0;
+  return (int)(vm->sp - vm->DS);
+}
+
+extern "C" v4_i32 vm_ds_peek_public(struct Vm* vm, int index_from_top)
+{
+  if (!vm)
+    return 0;
+
+  int depth = (int)(vm->sp - vm->DS);
+  if (index_from_top < 0 || index_from_top >= depth)
+    return 0;  // Out of range
+
+  return vm->sp[-1 - index_from_top];
+}

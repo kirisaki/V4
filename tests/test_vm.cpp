@@ -516,3 +516,153 @@ TEST_CASE("LOAD/STORE unaligned is rejected (addr % 4 != 0)")
 
   vm_destroy(vm);
 }
+
+/* ------------------------------------------------------------------------- */
+/* Stack inspection API tests                                                */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("vm_ds_depth_public - empty stack")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  CHECK(vm_ds_depth_public(&vm) == 0);
+}
+
+TEST_CASE("vm_ds_depth_public - after pushing values")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // LIT 10; LIT 20; LIT 30; RET
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 10);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 20);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 30);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm_ds_depth_public(&vm) == 3);
+}
+
+TEST_CASE("vm_ds_depth_public - NULL vm")
+{
+  CHECK(vm_ds_depth_public(nullptr) == 0);
+}
+
+TEST_CASE("vm_ds_peek_public - peek at stack values")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // LIT 10; LIT 20; LIT 30; RET
+  // Stack bottom to top: [10, 20, 30]
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 10);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 20);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 30);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+
+  // Peek from top
+  CHECK(vm_ds_peek_public(&vm, 0) == 30);  // Top
+  CHECK(vm_ds_peek_public(&vm, 1) == 20);  // Second from top
+  CHECK(vm_ds_peek_public(&vm, 2) == 10);  // Third from top (bottom)
+}
+
+TEST_CASE("vm_ds_peek_public - out of range returns 0")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // LIT 42; RET
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 42);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm_ds_depth_public(&vm) == 1);
+
+  // Valid peek
+  CHECK(vm_ds_peek_public(&vm, 0) == 42);
+
+  // Out of range (negative)
+  CHECK(vm_ds_peek_public(&vm, -1) == 0);
+
+  // Out of range (too large)
+  CHECK(vm_ds_peek_public(&vm, 1) == 0);
+  CHECK(vm_ds_peek_public(&vm, 100) == 0);
+}
+
+TEST_CASE("vm_ds_peek_public - empty stack")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  CHECK(vm_ds_depth_public(&vm) == 0);
+  CHECK(vm_ds_peek_public(&vm, 0) == 0);
+}
+
+TEST_CASE("vm_ds_peek_public - NULL vm")
+{
+  CHECK(vm_ds_peek_public(nullptr, 0) == 0);
+}
+
+TEST_CASE("Stack inspection - integration test")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Simulate Forth "5 3 +"
+  // LIT 5; LIT 3; ADD; RET
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 5);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 3);
+  emit8(code, &k, (v4_u8)v4::Op::ADD);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+
+  // Verify result: stack depth is 1, top value is 8
+  CHECK(vm_ds_depth_public(&vm) == 1);
+  CHECK(vm_ds_peek_public(&vm, 0) == 8);
+}
+
+TEST_CASE("Stack inspection - after complex operations")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Simulate: 10 DUP * (10 squared = 100)
+  // LIT 10; DUP; MUL; RET
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 10);
+  emit8(code, &k, (v4_u8)v4::Op::DUP);
+  emit8(code, &k, (v4_u8)v4::Op::MUL);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+
+  CHECK(vm_ds_depth_public(&vm) == 1);
+  CHECK(vm_ds_peek_public(&vm, 0) == 100);
+}
