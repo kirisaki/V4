@@ -38,6 +38,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - vm_register_word uses arena allocator when available (falls back to malloc)
 - vm_destroy and vm_reset_dictionary skip free() when using arena
 - Word name memory is now managed by arena or malloc depending on configuration
+- CMakeLists.txt reorganized with clear sections and better structure
+- Build system now uses helper function for test targets to reduce repetition
+- Added project version to CMake configuration (0.2.1)
+- Improved include directory handling with generator expressions
+
+### Added (Build System)
+- V4_BUILD_TOOLS option to control tool building (default: ON)
+- V4_ENABLE_MOCK_HAL option to control mock HAL inclusion (default: ON)
+- V4_OPTIMIZE_SIZE option to control size optimization (default: ON)
+- CMake configuration summary displayed during configuration
+- Installation targets for library and headers
+- V4::mock_hal alias target for easier linking
 
 ## [0.2.1] - 2025-10-27
 
