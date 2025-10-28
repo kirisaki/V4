@@ -80,10 +80,8 @@ endif()
 # Tools
 # ============================================================================
 
-if(V4_BUILD_TOOLS AND V4_ENABLE_MOCK_HAL)
-  add_executable(v4repl tools/v4repl.cpp)
-  target_link_libraries(v4repl PRIVATE v4vm mock_hal)
-endif()
+# NOTE: v4repl tool has been moved to a separate repository
+# V4_BUILD_TOOLS option is kept for future tools
 
 # ============================================================================
 # Tests

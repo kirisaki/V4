@@ -43,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added project version to CMake configuration (0.2.1)
 - Improved include directory handling with generator expressions
 
+### Removed
+- v4repl tool (moved to separate repository)
+
 ### Added (Build System)
 - V4_BUILD_TOOLS option to control tool building (default: ON)
 - V4_ENABLE_MOCK_HAL option to control mock HAL inclusion (default: ON)
