@@ -19,9 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Alignment support for various data types
   - v4_arena_init, v4_arena_alloc, v4_arena_reset APIs
   - Eliminates need for malloc/free in constrained environments
+- Hardware Abstraction Layer (HAL) for embedded platforms:
+  - GPIO API: pin initialization, read/write
+  - UART API: serial communication (init, putc, getc)
+  - Timer API: milliseconds/microseconds, delays
+  - System API: reset and platform info
+- SYS instruction (0x60) for HAL access from bytecode:
+  - 10 system call IDs for GPIO, UART, and Timer operations
+  - Stack-based parameter passing
+  - Error code returns for all operations
+- Mock HAL implementation for unit testing
+- Comprehensive documentation (hal-api.md, sys-opcodes.md)
 
 ### Changed
 - vm_reset now implemented as vm_reset_dictionary + vm_reset_stacks for better modularity
+- All test targets now link with mock_hal for HAL function resolution
 
 ## [0.2.1] - 2025-10-27
 

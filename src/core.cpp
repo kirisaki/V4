@@ -8,6 +8,8 @@
 #include "v4/internal/memory.hpp"
 #include "v4/internal/vm.h"
 #include "v4/opcodes.hpp"
+#include "v4/sys_ids.h"
+#include "v4/v4_hal.h"
 #include "v4/vm_api.h"
 
 extern "C" int v4_vm_version(void)
@@ -508,6 +510,173 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         // Execute the called word
         if (v4_err e = vm_exec_raw(vm, word->code, word->code_len))
           return e;
+        break;
+      }
+
+      case v4::Op::SYS:
+      {
+        // Read SYS ID
+        if (ip >= ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        uint8_t sys_id = *ip++;
+
+        v4_err err = static_cast<v4_err>(Err::OK);
+
+        switch (sys_id)
+        {
+          /* GPIO operations */
+          case V4_SYS_GPIO_INIT:  // (pin mode -- err)
+          {
+            v4_i32 mode, pin;
+            if ((err = ds_pop(vm, &mode)))
+              return err;
+            if ((err = ds_pop(vm, &pin)))
+              return err;
+
+            v4_err hal_err = v4_hal_gpio_init(pin, static_cast<v4_hal_gpio_mode>(mode));
+            if ((err = ds_push(vm, hal_err)))
+              return err;
+            break;
+          }
+
+          case V4_SYS_GPIO_WRITE:  // (pin value -- err)
+          {
+            v4_i32 value, pin;
+            if ((err = ds_pop(vm, &value)))
+              return err;
+            if ((err = ds_pop(vm, &pin)))
+              return err;
+
+            v4_err hal_err = v4_hal_gpio_write(pin, value);
+            if ((err = ds_push(vm, hal_err)))
+              return err;
+            break;
+          }
+
+          case V4_SYS_GPIO_READ:  // (pin -- value err)
+          {
+            v4_i32 pin;
+            if ((err = ds_pop(vm, &pin)))
+              return err;
+
+            int value;
+            v4_err hal_err = v4_hal_gpio_read(pin, &value);
+            if ((err = ds_push(vm, value)))
+              return err;
+            if ((err = ds_push(vm, hal_err)))
+              return err;
+            break;
+          }
+
+          /* UART operations */
+          case V4_SYS_UART_INIT:  // (port baudrate -- err)
+          {
+            v4_i32 baudrate, port;
+            if ((err = ds_pop(vm, &baudrate)))
+              return err;
+            if ((err = ds_pop(vm, &port)))
+              return err;
+
+            v4_err hal_err = v4_hal_uart_init(port, baudrate);
+            if ((err = ds_push(vm, hal_err)))
+              return err;
+            break;
+          }
+
+          case V4_SYS_UART_PUTC:  // (port char -- err)
+          {
+            v4_i32 ch, port;
+            if ((err = ds_pop(vm, &ch)))
+              return err;
+            if ((err = ds_pop(vm, &port)))
+              return err;
+
+            v4_err hal_err = v4_hal_uart_putc(port, static_cast<char>(ch));
+            if ((err = ds_push(vm, hal_err)))
+              return err;
+            break;
+          }
+
+          case V4_SYS_UART_GETC:  // (port -- char err)
+          {
+            v4_i32 port;
+            if ((err = ds_pop(vm, &port)))
+              return err;
+
+            char ch;
+            v4_err hal_err = v4_hal_uart_getc(port, &ch);
+            if ((err = ds_push(vm, static_cast<v4_i32>(ch))))
+              return err;
+            if ((err = ds_push(vm, hal_err)))
+              return err;
+            break;
+          }
+
+          /* Timer operations */
+          case V4_SYS_MILLIS:  // ( -- ms)
+          {
+            uint32_t ms = v4_hal_millis();
+            if ((err = ds_push(vm, static_cast<v4_i32>(ms))))
+              return err;
+            break;
+          }
+
+          case V4_SYS_MICROS:  // ( -- us_lo us_hi)
+          {
+            uint64_t us = v4_hal_micros();
+            uint32_t us_lo = static_cast<uint32_t>(us & 0xFFFFFFFF);
+            uint32_t us_hi = static_cast<uint32_t>(us >> 32);
+            if ((err = ds_push(vm, static_cast<v4_i32>(us_lo))))
+              return err;
+            if ((err = ds_push(vm, static_cast<v4_i32>(us_hi))))
+              return err;
+            break;
+          }
+
+          case V4_SYS_DELAY_MS:  // (ms -- )
+          {
+            v4_i32 ms;
+            if ((err = ds_pop(vm, &ms)))
+              return err;
+
+            v4_hal_delay_ms(static_cast<uint32_t>(ms));
+            break;
+          }
+
+          case V4_SYS_DELAY_US:  // (us -- )
+          {
+            v4_i32 us;
+            if ((err = ds_pop(vm, &us)))
+              return err;
+
+            v4_hal_delay_us(static_cast<uint32_t>(us));
+            break;
+          }
+
+          /* System operations */
+          case V4_SYS_SYSTEM_RESET:  // ( -- )
+          {
+            v4_hal_system_reset();
+            // May not return
+            break;
+          }
+
+          case V4_SYS_SYSTEM_INFO:  // ( -- addr len)
+          {
+            const char* info = v4_hal_system_info();
+            size_t len = info ? strlen(info) : 0;
+            // Note: returning pointer as int - only works on 32-bit platforms
+            uintptr_t addr = reinterpret_cast<uintptr_t>(info);
+            if ((err = ds_push(vm, static_cast<v4_i32>(addr))))
+              return err;
+            if ((err = ds_push(vm, static_cast<v4_i32>(len))))
+              return err;
+            break;
+          }
+
+          default:
+            return static_cast<v4_err>(Err::UnknownOp);
+        }
         break;
       }
 
