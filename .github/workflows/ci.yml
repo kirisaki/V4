@@ -104,28 +104,87 @@ jobs:
   formatting:
     name: Code Formatting Check
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install clang-format
       run: |
         sudo apt-get update
         sudo apt-get install -y clang-format
-        
+
     - name: Check C/C++ formatting
       run: |
         find src include tests -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.h' -o -name '*.c' \) \
         -not -path "*/vendor/*" | \
         xargs clang-format --dry-run --Werror || \
         (echo "❌ C/C++ formatting check failed. Run 'clang-format -i src/**/*.{cpp,hpp,h} include/**/*.{h,hpp}' to fix." && exit 1)
-        
+
     - name: Install cmake-format
       run: pip install cmake-format pyyaml
-      
+
     - name: Check CMake formatting
       run: |
         find . -name 'CMakeLists.txt' -o -name '*.cmake' | \
         xargs cmake-format --check || \
         (echo "❌ CMake formatting check failed. Run 'cmake-format -i CMakeLists.txt' to fix." && exit 1)
+
+  build-options:
+    name: Build Options - ${{ matrix.config.name }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: "Minimal (no tests, no tools)"
+            tests: "OFF"
+            tools: "OFF"
+            mock_hal: "OFF"
+          - name: "Library only (with mock HAL)"
+            tests: "OFF"
+            tools: "OFF"
+            mock_hal: "ON"
+          - name: "Tools only"
+            tests: "OFF"
+            tools: "ON"
+            mock_hal: "ON"
+          - name: "Tests only"
+            tests: "ON"
+            tools: "OFF"
+            mock_hal: "ON"
+          - name: "Size optimized"
+            tests: "ON"
+            tools: "ON"
+            mock_hal: "ON"
+            optimize_size: "ON"
+          - name: "No size optimization"
+            tests: "ON"
+            tools: "ON"
+            mock_hal: "ON"
+            optimize_size: "OFF"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Configure CMake
+      run: |
+        cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DV4_BUILD_TESTS=${{ matrix.config.tests }} \
+          -DV4_BUILD_TOOLS=${{ matrix.config.tools }} \
+          -DV4_ENABLE_MOCK_HAL=${{ matrix.config.mock_hal }} \
+          ${{ matrix.config.optimize_size && format('-DV4_OPTIMIZE_SIZE={0}', matrix.config.optimize_size) || '' }}
+
+    - name: Build
+      run: cmake --build build -j
+
+    - name: Run tests
+      if: matrix.config.tests == 'ON'
+      working-directory: build
+      run: ctest --output-on-failure --verbose

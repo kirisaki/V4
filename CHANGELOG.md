@@ -51,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installation targets for library and headers
 - V4::mock_hal alias target for easier linking
 
+### Added (CI/CD)
+- Build options matrix CI job to test all CMake option combinations
+- Tests for minimal builds (library-only configurations)
+- Tests for size-optimized vs non-optimized builds
+- Verification of all new CMake options (V4_BUILD_TOOLS, V4_ENABLE_MOCK_HAL, V4_OPTIMIZE_SIZE)
+
 ## [0.2.1] - 2025-10-27
 
 ### Fixed
