@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Arena alignment test failure on macOS by ensuring test buffer is 16-byte aligned
+- Memory leak in test_vm when using vm_register_word without cleanup (detected by AddressSanitizer)
 
 ### Added (Build System)
 - V4_BUILD_TOOLS option to control tool building (default: ON)

@@ -845,6 +845,9 @@ TEST_CASE("Selective reset - vm_reset_stacks preserves dictionary")
 
   // Dictionary should be preserved
   CHECK(vm.word_count == 1);
+
+  // Clean up word names to prevent memory leak
+  vm_reset_dictionary(&vm);
 }
 
 TEST_CASE("Selective reset - vm_reset clears everything")
@@ -922,4 +925,7 @@ TEST_CASE("REPL use case - preserve stack across word definition")
   CHECK(vm_ds_peek_public(&vm, 2) == 3);
   CHECK(vm_ds_peek_public(&vm, 1) == 30);
   CHECK(vm_ds_peek_public(&vm, 0) == 25);
+
+  // Clean up word names to prevent memory leak
+  vm_reset_dictionary(&vm);
 }
