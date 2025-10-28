@@ -732,7 +732,7 @@ TEST_CASE("Stack snapshot and restore - basic")
   vm_ds_push(&vm, 30);
 
   // Create snapshot
-  VmStackSnapshot* snap = vm_ds_snapshot(&vm);
+  VmStackSnapshot *snap = vm_ds_snapshot(&vm);
   REQUIRE(snap != nullptr);
   REQUIRE(snap->depth == 3);
   REQUIRE(snap->data != nullptr);
@@ -758,7 +758,7 @@ TEST_CASE("Stack snapshot - empty stack")
   vm_reset(&vm);
 
   // Snapshot empty stack
-  VmStackSnapshot* snap = vm_ds_snapshot(&vm);
+  VmStackSnapshot *snap = vm_ds_snapshot(&vm);
   REQUIRE(snap != nullptr);
   REQUIRE(snap->depth == 0);
 
@@ -886,7 +886,7 @@ TEST_CASE("REPL use case - preserve stack across word definition")
 
   // User defines: ": SQUARE DUP * ;"
   // REPL needs to reset dictionary but preserve stack
-  VmStackSnapshot* snap = vm_ds_snapshot(&vm);
+  VmStackSnapshot *snap = vm_ds_snapshot(&vm);
   vm_reset_dictionary(&vm);
   vm_ds_restore(&vm, snap);
   vm_ds_snapshot_free(snap);

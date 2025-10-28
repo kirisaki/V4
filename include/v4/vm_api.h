@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+
 #include "v4/arena.h"
 
 #ifdef __cplusplus
@@ -77,7 +78,8 @@ extern "C"
     v4_u32 mem_size;     /**< RAM size in bytes */
     const V4_Mmio *mmio; /**< Optional static MMIO table (can be NULL) */
     int mmio_count;      /**< Number of MMIO entries in the table */
-    V4Arena *arena;      /**< Optional arena allocator for word names (can be NULL, uses malloc if NULL) */
+    V4Arena *arena; /**< Optional arena allocator for word names (can be NULL, uses malloc
+                       if NULL) */
   } VmConfig;
 
   /* Forward declarations for opaque VM and Word structures. */

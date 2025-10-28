@@ -1,11 +1,12 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <cstring>
+
 #include "doctest.h"
 #include "v4/arena.h"
 #include "v4/errors.hpp"
 #include "v4/internal/vm.h"
 #include "v4/opcodes.hpp"
 #include "v4/vm_api.h"
-#include <cstring>
 
 /* Helper to emit bytecode */
 static void emit8(v4_u8* code, int* k, v4_u8 byte)
@@ -278,7 +279,8 @@ TEST_CASE("VM with arena - out of memory")
   CHECK(idx1 == 0);
 
   // Try to register a word with a long name that won't fit
-  int idx2 = vm_register_word(vm, "THIS_IS_A_VERY_LONG_WORD_NAME_THAT_WILL_NOT_FIT", code, k);
+  int idx2 =
+      vm_register_word(vm, "THIS_IS_A_VERY_LONG_WORD_NAME_THAT_WILL_NOT_FIT", code, k);
   CHECK(idx2 < 0);  // Should fail (InvalidArg)
 
   vm_destroy(vm);

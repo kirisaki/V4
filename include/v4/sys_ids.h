@@ -19,10 +19,10 @@
 #define V4_SYS_UART_GETC 0x12 /**< Receive one character */
 
 /* Timer operations (0x20 - 0x2F) */
-#define V4_SYS_MILLIS 0x20    /**< Get milliseconds since startup */
-#define V4_SYS_MICROS 0x21    /**< Get microseconds since startup (64-bit) */
-#define V4_SYS_DELAY_MS 0x22  /**< Blocking delay in milliseconds */
-#define V4_SYS_DELAY_US 0x23  /**< Blocking delay in microseconds */
+#define V4_SYS_MILLIS 0x20   /**< Get milliseconds since startup */
+#define V4_SYS_MICROS 0x21   /**< Get microseconds since startup (64-bit) */
+#define V4_SYS_DELAY_MS 0x22 /**< Blocking delay in milliseconds */
+#define V4_SYS_DELAY_US 0x23 /**< Blocking delay in microseconds */
 
 /* System operations (0xF0 - 0xFF) */
 #define V4_SYS_SYSTEM_RESET 0xFE /**< Perform system reset */

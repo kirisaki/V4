@@ -1,4 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <cstring>
+
 #include "doctest.h"
 #include "mock_hal.h"
 #include "v4/errors.hpp"
@@ -6,7 +8,6 @@
 #include "v4/opcodes.hpp"
 #include "v4/sys_ids.h"
 #include "v4/vm_api.h"
-#include <cstring>
 
 /* Helper to emit bytecode */
 static void emit8(v4_u8* code, int* k, v4_u8 byte)
@@ -167,8 +168,8 @@ TEST_CASE("SYS UART_GETC")
 
   // Stack: [char, err]
   CHECK(vm_ds_depth_public(&vm) == 2);
-  CHECK(vm_ds_peek_public(&vm, 0) == 0);   // err = 0
-  CHECK(vm_ds_peek_public(&vm, 1) == 'X'); // char = 'X'
+  CHECK(vm_ds_peek_public(&vm, 0) == 0);    // err = 0
+  CHECK(vm_ds_peek_public(&vm, 1) == 'X');  // char = 'X'
 }
 
 TEST_CASE("SYS MILLIS")

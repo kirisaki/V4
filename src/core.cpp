@@ -819,8 +819,7 @@ extern "C" struct VmStackSnapshot* vm_ds_snapshot(struct Vm* vm)
   if (depth == 0)
   {
     // Empty stack - return snapshot with NULL data
-    VmStackSnapshot* snap =
-        (VmStackSnapshot*)malloc(sizeof(VmStackSnapshot));
+    VmStackSnapshot* snap = (VmStackSnapshot*)malloc(sizeof(VmStackSnapshot));
     if (!snap)
       return nullptr;
     snap->data = nullptr;
@@ -846,8 +845,7 @@ extern "C" struct VmStackSnapshot* vm_ds_snapshot(struct Vm* vm)
   return snap;
 }
 
-extern "C" v4_err vm_ds_restore(struct Vm* vm,
-                                const struct VmStackSnapshot* snapshot)
+extern "C" v4_err vm_ds_restore(struct Vm* vm, const struct VmStackSnapshot* snapshot)
 {
   if (!vm || !snapshot)
     return static_cast<v4_err>(Err::InvalidArg);

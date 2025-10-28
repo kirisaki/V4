@@ -1,4 +1,5 @@
 #include "v4/arena.h"
+
 #include <cstring>
 
 extern "C" void v4_arena_init(V4Arena* arena, uint8_t* buffer, size_t size)

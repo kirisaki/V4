@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+
 #include "v4/vm_api.h"
 
 #ifdef __cplusplus

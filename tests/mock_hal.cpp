@@ -1,5 +1,6 @@
-#include "v4/v4_hal.h"
 #include <cstring>
+
+#include "v4/v4_hal.h"
 
 /**
  * @file mock_hal.cpp
@@ -218,8 +219,7 @@ extern "C" v4_err v4_hal_uart_write(int port, const char* buf, int len)
   return 0;
 }
 
-extern "C" v4_err v4_hal_uart_read(int port, char* buf, int max_len,
-                                   int* out_len)
+extern "C" v4_err v4_hal_uart_read(int port, char* buf, int max_len, int* out_len)
 {
   if (port < 0 || port >= MAX_UART_PORTS)
     return -13;  // OutOfBounds
