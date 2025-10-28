@@ -69,6 +69,12 @@ if(V4_BUILD_TESTS)
   target_include_directories(test_sys PRIVATE tests/vendor/doctest)
   add_test(NAME test_sys COMMAND test_sys)
 
+  # VM with Arena tests
+  add_executable(test_vm_arena tests/test_vm_arena.cpp)
+  target_link_libraries(test_vm_arena PRIVATE v4vm mock_hal)
+  target_include_directories(test_vm_arena PRIVATE tests/vendor/doctest)
+  add_test(NAME test_vm_arena COMMAND test_vm_arena)
+
   # C Tests
   add_executable(test_vm_c tests/test_vm_c.c)
   target_include_directories(test_vm_c PRIVATE ${PROJECT_SOURCE_DIR}/include)

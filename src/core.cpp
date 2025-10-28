@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "v4/arena.h"
 #include "v4/errors.hpp"
 #include "v4/internal/memory.hpp"
 #include "v4/internal/vm.h"
@@ -22,15 +23,20 @@ extern "C" void vm_reset_dictionary(Vm* vm)
   if (!vm)
     return;
 
-  // Free all word names and clear dictionary
-  for (int i = 0; i < vm->word_count; i++)
+  // Free word names only if using malloc (not arena)
+  if (!vm->arena)
   {
-    if (vm->words[i].name)
+    for (int i = 0; i < vm->word_count; i++)
     {
-      free(vm->words[i].name);
-      vm->words[i].name = nullptr;
+      if (vm->words[i].name)
+      {
+        free(vm->words[i].name);
+        vm->words[i].name = nullptr;
+      }
     }
   }
+  // If using arena, names are managed by arena owner
+
   vm->word_count = 0;
 }
 
@@ -707,9 +713,23 @@ extern "C" int vm_register_word(Vm* vm, const char* name, const uint8_t* code,
   // Copy name if provided (NULL is allowed for anonymous words)
   if (name)
   {
-    vm->words[idx].name = strdup(name);
-    if (!vm->words[idx].name)
-      return static_cast<v4_err>(Err::InvalidArg);  // strdup failed (out of memory)
+    size_t len = strlen(name) + 1;  // +1 for null terminator
+
+    // Use arena if available, otherwise malloc
+    if (vm->arena)
+    {
+      char* name_copy = static_cast<char*>(v4_arena_alloc(vm->arena, len, 1));
+      if (!name_copy)
+        return static_cast<v4_err>(Err::InvalidArg);  // Arena allocation failed
+      memcpy(name_copy, name, len);
+      vm->words[idx].name = name_copy;
+    }
+    else
+    {
+      vm->words[idx].name = strdup(name);
+      if (!vm->words[idx].name)
+        return static_cast<v4_err>(Err::InvalidArg);  // strdup failed (out of memory)
+    }
   }
   else
   {

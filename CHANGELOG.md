@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - vm_reset now implemented as vm_reset_dictionary + vm_reset_stacks for better modularity
 - All test targets now link with mock_hal for HAL function resolution
+- VmConfig now includes optional arena field for memory management
+- vm_register_word uses arena allocator when available (falls back to malloc)
+- vm_destroy and vm_reset_dictionary skip free() when using arena
+- Word name memory is now managed by arena or malloc depending on configuration
 
 ## [0.2.1] - 2025-10-27
 

@@ -52,6 +52,9 @@ extern "C"
     Word words[V4_MAX_WORDS]; /**< Word dictionary */
     int word_count;           /**< Number of registered words */
 
+    /* Memory management */
+    V4Arena *arena; /**< Optional arena allocator (NULL = use malloc) */
+
     /* Reserved for future JIT / IC linkage */
     const VmConfig *boot_cfg_snapshot;
   } Vm;

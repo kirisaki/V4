@@ -133,6 +133,9 @@ extern "C" struct Vm *vm_create(const VmConfig *cfg)
     vm->mmio_count = n;
   }
 
+  // Arena allocator (optional)
+  vm->arena = cfg->arena;
+
   vm->last_err = 0;
   vm->boot_cfg_snapshot = cfg;
   return vm;
@@ -143,15 +146,19 @@ extern "C" void vm_destroy(struct Vm *vm)
   if (!vm)
     return;
 
-  // Free all word names allocated by vm_register_word
-  for (int i = 0; i < vm->word_count; i++)
+  // Free word names only if using malloc (not arena)
+  if (!vm->arena)
   {
-    if (vm->words[i].name)
+    for (int i = 0; i < vm->word_count; i++)
     {
-      ::free(vm->words[i].name);
-      vm->words[i].name = nullptr;
+      if (vm->words[i].name)
+      {
+        ::free(vm->words[i].name);
+        vm->words[i].name = nullptr;
+      }
     }
   }
+  // If using arena, names are managed by arena owner (user responsibility)
 
   ::free(vm);
 }
