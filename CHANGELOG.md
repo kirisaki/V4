@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - vm_ds_push, vm_ds_pop, vm_ds_clear: Direct stack manipulation APIs
   - vm_ds_snapshot, vm_ds_restore, vm_ds_snapshot_free: Stack snapshot/restore for preserving state across VM operations
 - Comprehensive test coverage for all new REPL APIs
+- Arena memory allocator for embedded systems:
+  - Linear bump allocator without individual free
+  - Alignment support for various data types
+  - v4_arena_init, v4_arena_alloc, v4_arena_reset APIs
+  - Eliminates need for malloc/free in constrained environments
 
 ### Changed
 - vm_reset now implemented as vm_reset_dictionary + vm_reset_stacks for better modularity

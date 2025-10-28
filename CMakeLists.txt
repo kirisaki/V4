@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---- Libraries
-add_library(v4vm STATIC src/core.cpp src/memory.cpp)
+add_library(v4vm STATIC src/core.cpp src/memory.cpp src/arena.cpp)
 target_include_directories(v4vm PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(v4vm PRIVATE ${PROJECT_SOURCE_DIR}/include/v4/internal)
 
@@ -51,6 +51,12 @@ if(V4_BUILD_TESTS)
   target_link_libraries(test_memory PRIVATE v4vm)
   target_include_directories(test_memory PRIVATE tests/vendor/doctest)
   add_test(NAME test_memory COMMAND test_memory)
+
+  # Arena tests
+  add_executable(test_arena tests/test_arena.cpp)
+  target_link_libraries(test_arena PRIVATE v4vm)
+  target_include_directories(test_arena PRIVATE tests/vendor/doctest)
+  add_test(NAME test_arena COMMAND test_arena)
 
   # C Tests
   add_executable(test_vm_c tests/test_vm_c.c)
