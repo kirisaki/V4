@@ -1,7 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <cstdint>
+#include <cstring>
+
 #include "doctest.h"
 #include "v4/arena.h"
-#include <cstring>
 
 TEST_CASE("Arena initialization")
 {
@@ -38,7 +40,7 @@ TEST_CASE("Arena basic allocation")
 
 TEST_CASE("Arena alignment")
 {
-  uint8_t buffer[1024];
+  alignas(16) uint8_t buffer[1024];
   V4Arena arena;
   v4_arena_init(&arena, buffer, sizeof(buffer));
 
@@ -179,7 +181,8 @@ TEST_CASE("Arena with struct allocation")
   v4_arena_init(&arena, buffer, sizeof(buffer));
 
   // Allocate struct with proper alignment
-  TestStruct* s1 = (TestStruct*)v4_arena_alloc(&arena, sizeof(TestStruct), alignof(TestStruct));
+  TestStruct* s1 =
+      (TestStruct*)v4_arena_alloc(&arena, sizeof(TestStruct), alignof(TestStruct));
   REQUIRE(s1 != nullptr);
   CHECK(((uintptr_t)s1 & (alignof(TestStruct) - 1)) == 0);
 
@@ -193,7 +196,8 @@ TEST_CASE("Arena with struct allocation")
   CHECK(s1->c == 30);
 
   // Allocate another struct
-  TestStruct* s2 = (TestStruct*)v4_arena_alloc(&arena, sizeof(TestStruct), alignof(TestStruct));
+  TestStruct* s2 =
+      (TestStruct*)v4_arena_alloc(&arena, sizeof(TestStruct), alignof(TestStruct));
   REQUIRE(s2 != nullptr);
   CHECK(s2 != s1);
 
