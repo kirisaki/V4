@@ -560,6 +560,20 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         break;
       }
 
+      case v4::Op::SELECT:
+      {
+        v4_i32 a, b, flag;
+        if (v4_err e = ds_pop(vm, &a))
+          return e;
+        if (v4_err e = ds_pop(vm, &b))
+          return e;
+        if (v4_err e = ds_pop(vm, &flag))
+          return e;
+        if (v4_err e = ds_push(vm, flag ? a : b))
+          return e;
+        break;
+      }
+
       /* -------- Memory -------- */
       case v4::Op::LOAD:
       {
@@ -704,6 +718,59 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         if (v4_err e = rs_peek(vm, 0, &val))
           return e;
         if (v4_err e = ds_push(vm, val))
+          return e;
+        break;
+      }
+
+      /* -------- Compact literals -------- */
+      case v4::Op::LIT0:
+      {
+        if (v4_err e = ds_push(vm, 0))
+          return e;
+        break;
+      }
+
+      case v4::Op::LIT1:
+      {
+        if (v4_err e = ds_push(vm, 1))
+          return e;
+        break;
+      }
+
+      case v4::Op::LITN1:
+      {
+        if (v4_err e = ds_push(vm, -1))
+          return e;
+        break;
+      }
+
+      case v4::Op::LIT_U8:
+      {
+        if (ip >= ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        v4_u32 val = (v4_u32)*ip++;
+        if (v4_err e = ds_push(vm, (v4_i32)val))
+          return e;
+        break;
+      }
+
+      case v4::Op::LIT_I8:
+      {
+        if (ip >= ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        int8_t val = (int8_t)*ip++;
+        if (v4_err e = ds_push(vm, (v4_i32)val))
+          return e;
+        break;
+      }
+
+      case v4::Op::LIT_I16:
+      {
+        if (ip + 2 > ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        int16_t val = read_i16_le(ip);
+        ip += 2;
+        if (v4_err e = ds_push(vm, (v4_i32)val))
           return e;
         break;
       }
