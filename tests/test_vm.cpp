@@ -929,3 +929,418 @@ TEST_CASE("REPL use case - preserve stack across word definition")
   // Clean up word names to prevent memory leak
   vm_reset_dictionary(&vm);
 }
+
+/* ------------------------------------------------------------------------- */
+/* Extended arithmetic operations (Commit 1)                                 */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("unsigned division (DIVU)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, -10);  // 0xFFFFFFF6 as unsigned = 4294967286
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 2);
+  emit8(code, &k, (v4_u8)v4::Op::DIVU);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  // -10 as unsigned / 2 = 2147483643
+  CHECK((v4_u32)vm.DS[0] == 2147483643u);
+}
+
+TEST_CASE("unsigned modulo (MODU)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, -10);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 3);
+  emit8(code, &k, (v4_u8)v4::Op::MODU);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  // -10 as unsigned % 3
+  CHECK((v4_u32)vm.DS[0] == (4294967286u % 3));
+}
+
+TEST_CASE("increment (INC)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 42);
+  emit8(code, &k, (v4_u8)v4::Op::INC);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 43);
+}
+
+TEST_CASE("decrement (DEC)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 42);
+  emit8(code, &k, (v4_u8)v4::Op::DEC);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 41);
+}
+
+TEST_CASE("unsigned less than (LTU)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Test -1 < 1 (unsigned: 0xFFFFFFFF < 1 = false)
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, -1);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 1);
+  emit8(code, &k, (v4_u8)v4::Op::LTU);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == V4_FALSE);  // 0xFFFFFFFF is not < 1 unsigned
+
+  // Test 1 < 10 (unsigned: true)
+  vm_reset(&vm);
+  k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 1);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 10);
+  emit8(code, &k, (v4_u8)v4::Op::LTU);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.DS[0] == V4_TRUE);
+}
+
+TEST_CASE("unsigned less than or equal (LEU)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Test 5 <= 5 (unsigned: true)
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 5);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 5);
+  emit8(code, &k, (v4_u8)v4::Op::LEU);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.DS[0] == V4_TRUE);
+}
+
+TEST_CASE("shift left (SHL)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 3);  // value
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 2);  // shift amount
+  emit8(code, &k, (v4_u8)v4::Op::SHL);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 12);  // 3 << 2 = 12
+}
+
+TEST_CASE("shift right logical (SHR)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, -8);  // 0xFFFFFFF8
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 2);
+  emit8(code, &k, (v4_u8)v4::Op::SHR);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  // -8 >> 2 (logical) = 0x3FFFFFFE
+  CHECK((v4_u32)vm.DS[0] == 0x3FFFFFFEu);
+}
+
+TEST_CASE("shift right arithmetic (SAR)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, -8);
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 2);
+  emit8(code, &k, (v4_u8)v4::Op::SAR);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == -2);  // -8 >> 2 (arithmetic) = -2
+}
+
+/* ------------------------------------------------------------------------- */
+/* Control flow and compact literals (Commit 3)                              */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("SELECT instruction (ternary operator)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Test flag ? 10 : 20 with flag = true
+  v4_u8 code[32];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, V4_TRUE);  // flag
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 20);  // b (false branch)
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 10);  // a (true branch)
+  emit8(code, &k, (v4_u8)v4::Op::SELECT);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 10);  // Selected a
+
+  // Test with flag = false
+  vm_reset(&vm);
+  k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, V4_FALSE);  // flag
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 20);  // b
+  emit8(code, &k, (v4_u8)v4::Op::LIT);
+  emit32(code, &k, 10);  // a
+  emit8(code, &k, (v4_u8)v4::Op::SELECT);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.DS[0] == 20);  // Selected b
+}
+
+TEST_CASE("compact literals (LIT0, LIT1, LITN1)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[] = {(v4_u8)v4::Op::LIT0, (v4_u8)v4::Op::LIT1, (v4_u8)v4::Op::LITN1,
+                  (v4_u8)v4::Op::RET};
+
+  int rc = vm_exec_raw(&vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 3);
+  CHECK(vm.DS[0] == 0);
+  CHECK(vm.DS[1] == 1);
+  CHECK(vm.DS[2] == -1);
+}
+
+TEST_CASE("compact literals (LIT_U8)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[] = {(v4_u8)v4::Op::LIT_U8, 0xFF, (v4_u8)v4::Op::RET};
+
+  int rc = vm_exec_raw(&vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK((v4_u32)vm.DS[0] == 0xFF);  // Unsigned, not sign-extended
+}
+
+TEST_CASE("compact literals (LIT_I8)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[] = {(v4_u8)v4::Op::LIT_I8, 0xFF, (v4_u8)v4::Op::RET};
+
+  int rc = vm_exec_raw(&vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == -1);  // Signed, sign-extended
+}
+
+TEST_CASE("compact literals (LIT_I16)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LIT_I16);
+  emit16(code, &k, -1000);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == -1000);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Local variable support (Commit 4)                                         */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("local variables (LGET/LSET)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Setup: Manually create a local frame in return stack
+  // Simulate having 3 locals
+  vm.fp = vm.RS;  // Set frame pointer
+  vm.RS[0] = 100;
+  vm.RS[1] = 200;
+  vm.RS[2] = 300;
+  vm.rp = vm.RS + 3;
+
+  // Test LGET 0
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LGET);
+  emit8(code, &k, 0);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 1);
+  CHECK(vm.DS[0] == 100);
+
+  // Test LSET 1
+  vm_reset(&vm);
+  vm.fp = vm.RS;
+  vm.RS[0] = 100;
+  vm.RS[1] = 200;
+  vm.rp = vm.RS + 2;
+
+  vm_ds_push(&vm, 999);  // New value
+  k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LSET);
+  emit8(code, &k, 1);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.RS[1] == 999);
+}
+
+TEST_CASE("local variables (LTEE)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  vm.fp = vm.RS;
+  vm.RS[0] = 0;
+  vm.rp = vm.RS + 1;
+
+  vm_ds_push(&vm, 42);
+  v4_u8 code[] = {(v4_u8)v4::Op::LTEE, 0, (v4_u8)v4::Op::RET};
+
+  int rc = vm_exec_raw(&vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.RS[0] == 42);      // Local was set
+  CHECK(vm.DS[0] == 42);      // Value still on stack
+  CHECK(vm.sp == vm.DS + 1);  // Stack unchanged
+}
+
+TEST_CASE("local variables (LGET0/LGET1)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  vm.fp = vm.RS;
+  vm.RS[0] = 111;
+  vm.RS[1] = 222;
+  vm.rp = vm.RS + 2;
+
+  v4_u8 code[] = {(v4_u8)v4::Op::LGET0, (v4_u8)v4::Op::LGET1, (v4_u8)v4::Op::RET};
+
+  int rc = vm_exec_raw(&vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.sp == vm.DS + 2);
+  CHECK(vm.DS[0] == 111);
+  CHECK(vm.DS[1] == 222);
+}
+
+TEST_CASE("local variables (LSET0/LSET1)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  vm.fp = vm.RS;
+  vm.RS[0] = 0;
+  vm.RS[1] = 0;
+  vm.rp = vm.RS + 2;
+
+  vm_ds_push(&vm, 777);
+  vm_ds_push(&vm, 888);
+  v4_u8 code[] = {(v4_u8)v4::Op::LSET1, (v4_u8)v4::Op::LSET0, (v4_u8)v4::Op::RET};
+
+  int rc = vm_exec_raw(&vm, code, sizeof(code));
+  CHECK(rc == 0);
+  CHECK(vm.RS[0] == 777);
+  CHECK(vm.RS[1] == 888);
+}
+
+TEST_CASE("local variables (LINC/LDEC)")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  vm.fp = vm.RS;
+  vm.RS[0] = 10;
+  vm.RS[1] = 20;
+  vm.rp = vm.RS + 2;
+
+  v4_u8 code[16];
+  int k = 0;
+  emit8(code, &k, (v4_u8)v4::Op::LINC);
+  emit8(code, &k, 0);
+  emit8(code, &k, (v4_u8)v4::Op::LDEC);
+  emit8(code, &k, 1);
+  emit8(code, &k, (v4_u8)v4::Op::RET);
+
+  int rc = vm_exec_raw(&vm, code, k);
+  CHECK(rc == 0);
+  CHECK(vm.RS[0] == 11);
+  CHECK(vm.RS[1] == 19);
+}

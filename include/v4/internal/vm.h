@@ -28,6 +28,7 @@ extern "C"
     v4_i32 RS[64];  /**< Return stack (top at rp-1) */
     v4_i32 *sp;     /**< Next push position on data stack */
     v4_i32 *rp;     /**< Next push position on return stack */
+    v4_i32 *fp; /**< Local frame pointer (points to base of current local frame in RS) */
 
     /* Memory configuration */
     uint8_t *mem;

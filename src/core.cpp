@@ -48,6 +48,7 @@ extern "C" void vm_reset_stacks(Vm* vm)
   // Reset data/return stacks to initial positions
   vm->sp = vm->DS;
   vm->rp = vm->RS;
+  vm->fp = nullptr;  // No local frame initially
 }
 
 extern "C" void vm_reset(Vm* vm)
@@ -772,6 +773,127 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         ip += 2;
         if (v4_err e = ds_push(vm, (v4_i32)val))
           return e;
+        break;
+      }
+
+      /* -------- Local variables -------- */
+      case v4::Op::LGET:
+      {
+        if (ip >= ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        uint8_t idx = *ip++;
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);  // No local frame
+        if (vm->fp + idx >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);  // Out of bounds
+        if (v4_err e = ds_push(vm, vm->fp[idx]))
+          return e;
+        break;
+      }
+
+      case v4::Op::LSET:
+      {
+        if (ip >= ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        uint8_t idx = *ip++;
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);  // No local frame
+        if (vm->fp + idx >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);  // Out of bounds
+        v4_i32 val;
+        if (v4_err e = ds_pop(vm, &val))
+          return e;
+        vm->fp[idx] = val;
+        break;
+      }
+
+      case v4::Op::LTEE:
+      {
+        if (ip >= ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        uint8_t idx = *ip++;
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);  // No local frame
+        if (vm->fp + idx >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);  // Out of bounds
+        v4_i32 val;
+        if (v4_err e = ds_peek(vm, 0, &val))
+          return e;
+        vm->fp[idx] = val;
+        break;
+      }
+
+      case v4::Op::LGET0:
+      {
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);
+        if (vm->fp >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);
+        if (v4_err e = ds_push(vm, vm->fp[0]))
+          return e;
+        break;
+      }
+
+      case v4::Op::LGET1:
+      {
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);
+        if (vm->fp + 1 >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);
+        if (v4_err e = ds_push(vm, vm->fp[1]))
+          return e;
+        break;
+      }
+
+      case v4::Op::LSET0:
+      {
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);
+        if (vm->fp >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);
+        v4_i32 val;
+        if (v4_err e = ds_pop(vm, &val))
+          return e;
+        vm->fp[0] = val;
+        break;
+      }
+
+      case v4::Op::LSET1:
+      {
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);
+        if (vm->fp + 1 >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);
+        v4_i32 val;
+        if (v4_err e = ds_pop(vm, &val))
+          return e;
+        vm->fp[1] = val;
+        break;
+      }
+
+      case v4::Op::LINC:
+      {
+        if (ip >= ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        uint8_t idx = *ip++;
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);
+        if (vm->fp + idx >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);
+        vm->fp[idx]++;
+        break;
+      }
+
+      case v4::Op::LDEC:
+      {
+        if (ip >= ip_end)
+          return static_cast<v4_err>(Err::TruncatedLiteral);
+        uint8_t idx = *ip++;
+        if (!vm->fp)
+          return static_cast<v4_err>(Err::InvalidArg);
+        if (vm->fp + idx >= vm->rp)
+          return static_cast<v4_err>(Err::StackUnderflow);
+        vm->fp[idx]--;
         break;
       }
 
