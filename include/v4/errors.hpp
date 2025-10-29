@@ -15,6 +15,9 @@ enum class Err : int
 
 #undef ERR
 
+// Macro to reduce code size for error returns
+#define V4_ERR(name) static_cast<v4_err>(Err::name)
+
 // Optional: helper to get a string message for each error
 inline const char *err_str(Err e)
 {
