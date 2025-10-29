@@ -266,6 +266,60 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         break;
       }
 
+      case v4::Op::DIVU:
+      {
+        v4_u32 a, b;
+        v4_i32 a_i32, b_i32;
+        if (v4_err e = ds_pop(vm, &b_i32))
+          return e;
+        if (v4_err e = ds_pop(vm, &a_i32))
+          return e;
+        b = (v4_u32)b_i32;
+        a = (v4_u32)a_i32;
+        if (b == 0)
+          return static_cast<v4_err>(Err::DivByZero);
+        if (v4_err e = ds_push(vm, (v4_i32)(a / b)))
+          return e;
+        break;
+      }
+
+      case v4::Op::MODU:
+      {
+        v4_u32 a, b;
+        v4_i32 a_i32, b_i32;
+        if (v4_err e = ds_pop(vm, &b_i32))
+          return e;
+        if (v4_err e = ds_pop(vm, &a_i32))
+          return e;
+        b = (v4_u32)b_i32;
+        a = (v4_u32)a_i32;
+        if (b == 0)
+          return static_cast<v4_err>(Err::DivByZero);
+        if (v4_err e = ds_push(vm, (v4_i32)(a % b)))
+          return e;
+        break;
+      }
+
+      case v4::Op::INC:
+      {
+        v4_i32 a;
+        if (v4_err e = ds_pop(vm, &a))
+          return e;
+        if (v4_err e = ds_push(vm, a + 1))
+          return e;
+        break;
+      }
+
+      case v4::Op::DEC:
+      {
+        v4_i32 a;
+        if (v4_err e = ds_pop(vm, &a))
+          return e;
+        if (v4_err e = ds_push(vm, a - 1))
+          return e;
+        break;
+      }
+
       /* -------- Comparison -------- */
       case v4::Op::EQ:
       {
@@ -339,6 +393,36 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         break;
       }
 
+      case v4::Op::LTU:
+      {
+        v4_u32 a, b;
+        v4_i32 a_i32, b_i32;
+        if (v4_err e = ds_pop(vm, &b_i32))
+          return e;
+        if (v4_err e = ds_pop(vm, &a_i32))
+          return e;
+        b = (v4_u32)b_i32;
+        a = (v4_u32)a_i32;
+        if (v4_err e = ds_push(vm, a < b ? V4_TRUE : V4_FALSE))
+          return e;
+        break;
+      }
+
+      case v4::Op::LEU:
+      {
+        v4_u32 a, b;
+        v4_i32 a_i32, b_i32;
+        if (v4_err e = ds_pop(vm, &b_i32))
+          return e;
+        if (v4_err e = ds_pop(vm, &a_i32))
+          return e;
+        b = (v4_u32)b_i32;
+        a = (v4_u32)a_i32;
+        if (v4_err e = ds_push(vm, a <= b ? V4_TRUE : V4_FALSE))
+          return e;
+        break;
+      }
+
       /* -------- Bitwise -------- */
       case v4::Op::AND:
       {
@@ -382,6 +466,44 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         if (v4_err e = ds_pop(vm, &a))
           return e;
         if (v4_err e = ds_push(vm, ~a))
+          return e;
+        break;
+      }
+
+      case v4::Op::SHL:
+      {
+        v4_i32 shift, val;
+        if (v4_err e = ds_pop(vm, &shift))
+          return e;
+        if (v4_err e = ds_pop(vm, &val))
+          return e;
+        if (v4_err e = ds_push(vm, val << (shift & 0x1F)))
+          return e;
+        break;
+      }
+
+      case v4::Op::SHR:
+      {
+        v4_i32 shift, val_i32;
+        v4_u32 val;
+        if (v4_err e = ds_pop(vm, &shift))
+          return e;
+        if (v4_err e = ds_pop(vm, &val_i32))
+          return e;
+        val = (v4_u32)val_i32;
+        if (v4_err e = ds_push(vm, (v4_i32)(val >> (shift & 0x1F))))
+          return e;
+        break;
+      }
+
+      case v4::Op::SAR:
+      {
+        v4_i32 shift, val;
+        if (v4_err e = ds_pop(vm, &shift))
+          return e;
+        if (v4_err e = ds_pop(vm, &val))
+          return e;
+        if (v4_err e = ds_push(vm, val >> (shift & 0x1F)))
           return e;
         break;
       }

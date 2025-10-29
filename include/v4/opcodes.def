@@ -1,48 +1,77 @@
-// Stack operations
-OP(LIT   , 0x00, IMM32)   // LIT imm32
-OP(DUP   , 0x01, NO_IMM)
-OP(DROP  , 0x02, NO_IMM)
-OP(SWAP  , 0x03, NO_IMM)
-OP(OVER  , 0x04, NO_IMM)
-
-// Arithmetic operations
-OP(ADD   , 0x10, NO_IMM)
-OP(SUB   , 0x11, NO_IMM)
-OP(MUL   , 0x12, NO_IMM)
-OP(DIV   , 0x13, NO_IMM)
-OP(MOD   , 0x14, NO_IMM)
-
-// Comparison (signed, Forth-style true = -1)
-OP(EQ    , 0x20, NO_IMM)
-OP(NE    , 0x21, NO_IMM)
-OP(LT    , 0x22, NO_IMM)
-OP(LE    , 0x23, NO_IMM)
-OP(GT    , 0x24, NO_IMM)
-OP(GE    , 0x25, NO_IMM)
-
-// Logical / bitwise operations
-OP(AND   , 0x28, NO_IMM)
-OP(OR    , 0x29, NO_IMM)
-OP(XOR   , 0x2A, NO_IMM)
-OP(INVERT, 0x2B, NO_IMM)
-
-// Memory access (32-bit, little-endian)
-OP(LOAD  , 0x30, NO_IMM)
-OP(STORE , 0x31, NO_IMM)
-
-// Control flow (compiled by Front)
-OP(JMP   , 0x40, REL16)   // JMP off16 (signed byte offset)
-OP(JZ    , 0x41, REL16)   // JZ off16
-OP(JNZ   , 0x42, REL16)   // JNZ off16
-
-// Call / return
-OP(CALL  , 0x50, IDX16)   // CALL idx16 (word index)
-OP(RET   , 0x51, NO_IMM)
-
-// System hook (reserved; optional sugar like EMIT/KEY/millis)
-OP(SYS   , 0x60, IMM8)    // SYS id8
-
-// Return stack operations
-OP(TOR   , 0x70, NO_IMM)
-OP(FROMR , 0x71, NO_IMM)
-OP(RFETCH, 0x72, NO_IMM)
+// === Stack operations (0x00-0x0F) ===
+OP(LIT      , 0x00, IMM32)
+OP(DUP      , 0x01, NO_IMM)
+OP(DROP     , 0x02, NO_IMM)
+OP(SWAP     , 0x03, NO_IMM)
+OP(OVER     , 0x04, NO_IMM)
+// === Arithmetic (0x10-0x1F) ===
+OP(ADD      , 0x10, NO_IMM)
+OP(SUB      , 0x11, NO_IMM)
+OP(MUL      , 0x12, NO_IMM)
+OP(DIV      , 0x13, NO_IMM)  // signed division
+OP(MOD      , 0x14, NO_IMM)  // signed modulo
+OP(DIVU     , 0x15, NO_IMM)  // unsigned division
+OP(MODU     , 0x16, NO_IMM)  // unsigned modulo
+OP(INC      , 0x17, NO_IMM)  // ++TOS
+OP(DEC      , 0x18, NO_IMM)  // --TOS
+// === Comparison (0x20-0x2F) ===
+OP(EQ       , 0x20, NO_IMM)
+OP(NE       , 0x21, NO_IMM)
+OP(LT       , 0x22, NO_IMM)  // signed 
+OP(LE       , 0x23, NO_IMM)  // signed <=
+OP(GT       , 0x24, NO_IMM)  // signed >
+OP(GE       , 0x25, NO_IMM)  // signed >=
+OP(LTU      , 0x26, NO_IMM)  // unsigned 
+OP(LEU      , 0x27, NO_IMM)  // unsigned <=
+// === Bitwise / Logic (0x28-0x2F) ===
+OP(AND      , 0x28, NO_IMM)
+OP(OR       , 0x29, NO_IMM)
+OP(XOR      , 0x2A, NO_IMM)
+OP(INVERT   , 0x2B, NO_IMM)
+OP(SHL      , 0x2C, NO_IMM)
+OP(SHR      , 0x2D, NO_IMM)
+OP(SAR      , 0x2E, NO_IMM)
+// === Memory access (0x30-0x3F) ===
+OP(LOAD     , 0x30, NO_IMM)  // i32
+OP(STORE    , 0x31, NO_IMM)  // i32
+OP(LOAD8U   , 0x32, NO_IMM)
+OP(LOAD16U  , 0x33, NO_IMM)
+OP(STORE8   , 0x34, NO_IMM)
+OP(STORE16  , 0x35, NO_IMM)
+OP(LOAD8S   , 0x36, NO_IMM)
+OP(LOAD16S  , 0x37, NO_IMM)
+// === Control flow (0x40-0x4F) ===
+OP(JMP      , 0x40, REL16)   // signed 16-bit relative
+OP(JZ       , 0x41, REL16)   // signed 16-bit relative
+OP(JNZ      , 0x42, REL16)   // signed 16-bit relative
+OP(SELECT   , 0x43, NO_IMM)  // flag b a SELECT → flag ? a : b
+// === Call / Return (0x50-0x5F) ===
+OP(CALL     , 0x50, IDX16)
+OP(RET      , 0x51, NO_IMM)
+// === System / hostcall (0x60-0x6F) ===
+OP(SYS      , 0x60, IMM8)
+// === Return stack (0x70-0x7F) ===
+OP(TOR      , 0x70, NO_IMM)
+OP(FROMR    , 0x71, NO_IMM)
+OP(RFETCH   , 0x72, NO_IMM)
+// === Compact literals (0x73-0x78) ===
+OP(LIT0     , 0x73, NO_IMM)
+OP(LIT1     , 0x74, NO_IMM)
+OP(LITN1    , 0x75, NO_IMM)
+OP(LIT_U8   , 0x76, IMM8)
+OP(LIT_I8   , 0x77, IMM8)
+OP(LIT_I16  , 0x78, IMM16)
+// === Local variables (0x79-0x7F) ===
+OP(LGET     , 0x79, IMM8)
+OP(LSET     , 0x7A, IMM8)
+OP(LTEE     , 0x7B, IMM8)
+OP(LGET0    , 0x7C, NO_IMM)
+OP(LGET1    , 0x7D, NO_IMM)
+OP(LSET0    , 0x7E, NO_IMM)
+OP(LSET1    , 0x7F, NO_IMM)
+// === Local inc/dec (0x80-0x81) ===
+OP(LINC     , 0x80, IMM8)    // local[n]++
+OP(LDEC     , 0x81, IMM8)    // local[n]--
+// === Reserved / future ===
+OP(SYSX     , 0x8F, IMM8)    // hostcall extension
+// 0xC0–0xDF: reserved for f32/i64 type prefixes
