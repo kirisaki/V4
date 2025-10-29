@@ -1,4 +1,4 @@
-.PHONY: all build test clean format format-check
+.PHONY: all build test clean format format-check size
 
 # Default target
 all: build test
@@ -61,3 +61,29 @@ ubsan: clean
 	@cmake --build build-ubsan -j
 	@echo "🧪 Running tests with UndefinedBehaviorSanitizer..."
 	@cd build-ubsan && ctest --output-on-failure
+
+# Build release and show stripped binary sizes
+size:
+	@echo "📦 Building release with size optimization..."
+	@cmake -B build-release -DCMAKE_BUILD_TYPE=Release -DV4_BUILD_TESTS=ON -DV4_OPTIMIZE_SIZE=ON
+	@cmake --build build-release -j
+	@echo ""
+	@echo "📊 Stripping and measuring binary sizes..."
+	@echo ""
+	@echo "=== Library ==="
+	@if [ -f build-release/libv4vm.a ]; then \
+		cp build-release/libv4vm.a build-release/libv4vm.stripped.a && \
+		strip --strip-debug build-release/libv4vm.stripped.a && \
+		ls -lh build-release/libv4vm.a build-release/libv4vm.stripped.a | awk '{print $$9 ": " $$5}'; \
+	fi
+	@echo ""
+	@echo "=== Test Executables (stripped) ==="
+	@for binary in build-release/test_*; do \
+		if [ -f "$$binary" ] && [ -x "$$binary" ]; then \
+			cp "$$binary" "$${binary}.stripped" && \
+			strip "$${binary}.stripped" && \
+			echo "$$(basename $$binary): $$(ls -lh $${binary}.stripped | awk '{print $$5}')"; \
+		fi \
+	done
+	@echo ""
+	@echo "✅ Size measurement complete!"
