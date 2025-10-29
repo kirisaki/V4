@@ -163,3 +163,110 @@ TEST_CASE("Mixed RAM/MMIO access")
 
   vm_destroy(vm);
 }
+
+/* ------------------------------------------------------------------------- */
+/* Extended memory access operations (Commit 2)                              */
+/* ------------------------------------------------------------------------- */
+TEST_CASE("8-bit memory read/write (LOAD8U/STORE8)")
+{
+  uint8_t ram[64] = {};
+  VmConfig cfg{ram, (v4_u32)sizeof(ram), nullptr, 0};
+  Vm *vm = vm_create(&cfg);
+  REQUIRE(vm);
+
+  // Write pattern to memory
+  vm_ds_push(vm, 0x42);               // value
+  vm_ds_push(vm, 0);                  // address
+  v4_u8 store_code[] = {0x34, 0x51};  // STORE8, RET
+  CHECK(vm_exec_raw(vm, store_code, 2) == 0);
+
+  // Read back
+  vm_ds_push(vm, 0);                 // address
+  v4_u8 load_code[] = {0x32, 0x51};  // LOAD8U, RET
+  CHECK(vm_exec_raw(vm, load_code, 2) == 0);
+
+  v4_i32 val;
+  vm_ds_pop(vm, &val);
+  CHECK(val == 0x42);
+
+  vm_destroy(vm);
+}
+
+TEST_CASE("8-bit signed load (LOAD8S)")
+{
+  uint8_t ram[64] = {};
+  VmConfig cfg{ram, (v4_u32)sizeof(ram), nullptr, 0};
+  Vm *vm = vm_create(&cfg);
+  REQUIRE(vm);
+
+  // Write 0xFF (should be sign-extended to -1)
+  vm_ds_push(vm, 0xFF);
+  vm_ds_push(vm, 0);
+  v4_u8 store_code[] = {0x34, 0x51};  // STORE8, RET
+  CHECK(vm_exec_raw(vm, store_code, 2) == 0);
+
+  // Read as signed
+  vm_ds_push(vm, 0);
+  v4_u8 load_code[] = {0x36, 0x51};  // LOAD8S, RET
+  CHECK(vm_exec_raw(vm, load_code, 2) == 0);
+
+  v4_i32 val;
+  vm_ds_pop(vm, &val);
+  CHECK(val == -1);
+
+  vm_destroy(vm);
+}
+
+TEST_CASE("16-bit memory read/write (LOAD16U/STORE16)")
+{
+  uint8_t ram[64] = {};
+  VmConfig cfg{ram, (v4_u32)sizeof(ram), nullptr, 0};
+  Vm *vm = vm_create(&cfg);
+  REQUIRE(vm);
+
+  // Write pattern to memory (little-endian)
+  vm_ds_push(vm, 0x1234);
+  vm_ds_push(vm, 0);
+  v4_u8 store_code[] = {0x35, 0x51};  // STORE16, RET
+  CHECK(vm_exec_raw(vm, store_code, 2) == 0);
+
+  // Verify little-endian byte order
+  CHECK(ram[0] == 0x34);
+  CHECK(ram[1] == 0x12);
+
+  // Read back
+  vm_ds_push(vm, 0);
+  v4_u8 load_code[] = {0x33, 0x51};  // LOAD16U, RET
+  CHECK(vm_exec_raw(vm, load_code, 2) == 0);
+
+  v4_i32 val;
+  vm_ds_pop(vm, &val);
+  CHECK(val == 0x1234);
+
+  vm_destroy(vm);
+}
+
+TEST_CASE("16-bit signed load (LOAD16S)")
+{
+  uint8_t ram[64] = {};
+  VmConfig cfg{ram, (v4_u32)sizeof(ram), nullptr, 0};
+  Vm *vm = vm_create(&cfg);
+  REQUIRE(vm);
+
+  // Write 0xFFFF (should be sign-extended to -1)
+  vm_ds_push(vm, 0xFFFF);
+  vm_ds_push(vm, 0);
+  v4_u8 store_code[] = {0x35, 0x51};  // STORE16, RET
+  CHECK(vm_exec_raw(vm, store_code, 2) == 0);
+
+  // Read as signed
+  vm_ds_push(vm, 0);
+  v4_u8 load_code[] = {0x37, 0x51};  // LOAD16S, RET
+  CHECK(vm_exec_raw(vm, load_code, 2) == 0);
+
+  v4_i32 val;
+  vm_ds_pop(vm, &val);
+  CHECK(val == -1);
+
+  vm_destroy(vm);
+}
