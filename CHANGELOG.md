@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Extended arithmetic operations:
+  - DIVU (0x15), MODU (0x16): Unsigned division and modulo
+  - INC (0x17), DEC (0x18): Increment and decrement TOS
+- Extended comparison operations:
+  - LTU (0x26), LEU (0x27): Unsigned less-than comparisons
+- Bitwise shift operations:
+  - SHL (0x2C), SHR (0x2D), SAR (0x2E): Left shift, logical right shift, arithmetic right shift
+- Extended memory access operations:
+  - LOAD8U (0x32), LOAD16U (0x33): Unsigned 8/16-bit loads
+  - STORE8 (0x34), STORE16 (0x35): 8/16-bit stores
+  - LOAD8S (0x36), LOAD16S (0x37): Signed 8/16-bit loads with sign extension
+- Control flow and compact literal operations:
+  - SELECT (0x43): Ternary operator (flag b a SELECT → flag ? a : b)
+  - LIT0 (0x73), LIT1 (0x74), LITN1 (0x75): Common constant literals
+  - LIT_U8 (0x76), LIT_I8 (0x77), LIT_I16 (0x78): Compact immediate values
+- Local variable support:
+  - Frame pointer (fp) added to VM structure
+  - LGET (0x79), LSET (0x7A), LTEE (0x7B): General local variable access
+  - LGET0 (0x7C), LGET1 (0x7D), LSET0 (0x7E), LSET1 (0x7F): Optimized local access
+  - LINC (0x80), LDEC (0x81): Local variable increment/decrement
+- Comprehensive test coverage for all 31 new opcodes
+
+### Changed
+- Link Time Optimization (LTO) now enabled by default in release builds
+  - 35% size reduction in core VM code (23KB → 15KB stripped)
+  - Controlled by V4_ENABLE_LTO CMake option
+- Local variables stored in return stack with frame pointer for efficient access
+
+### Added (Build System)
+- V4_ENABLE_LTO option to control Link Time Optimization (default: ON)
+- IPO (Interprocedural Optimization) support detection via CheckIPOSupported
+
 ## [0.3.0] - 2025-10-28
 
 ### Added

@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
-project(V4VM VERSION 0.3.0 LANGUAGES C CXX)
+project(
+  V4VM
+  VERSION 0.3.0
+  LANGUAGES C CXX)
 
 # ============================================================================
 # Project Configuration
@@ -14,48 +17,51 @@ option(V4_BUILD_TESTS "Build unit tests" ON)
 option(V4_BUILD_TOOLS "Build command-line tools" ON)
 option(V4_ENABLE_MOCK_HAL "Build with mock HAL (required for tests)" ON)
 option(V4_OPTIMIZE_SIZE "Optimize for size (-Os)" ON)
+option(V4_ENABLE_LTO "Enable Link Time Optimization" ON)
 
 # ============================================================================
 # Core VM Library
 # ============================================================================
 
-set(V4VM_SOURCES
-  src/core.cpp
-  src/memory.cpp
-  src/arena.cpp
-)
+set(V4VM_SOURCES src/core.cpp src/memory.cpp src/arena.cpp)
 
 add_library(v4vm STATIC ${V4VM_SOURCES})
 
-target_include_directories(v4vm
-  PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-  PRIVATE
-    ${PROJECT_SOURCE_DIR}/include/v4/internal
-)
+target_include_directories(
+  v4vm
+  PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
+  PRIVATE ${PROJECT_SOURCE_DIR}/include/v4/internal)
 
 # Compiler flags
 if(MSVC)
-  target_compile_options(v4vm PRIVATE
-    /W4           # Warning level 4
-    /GR-          # Disable RTTI
-    /EHs-c-       # Disable exceptions
+  target_compile_options(
+    v4vm
+    PRIVATE /W4 # Warning level 4
+            /GR- # Disable RTTI
+            /EHs-c- # Disable exceptions
   )
   # Configuration-specific optimizations
-  target_compile_options(v4vm PRIVATE
-    $<$<CONFIG:Debug>:/Od>
-    $<$<CONFIG:Release>:/O1>
-  )
+  target_compile_options(v4vm PRIVATE $<$<CONFIG:Debug>:/Od> $<$<CONFIG:Release>:/O1>)
 else()
-  target_compile_options(v4vm PRIVATE
-    -Wall         # Enable all warnings
-    -Wextra       # Enable extra warnings
-    -fno-exceptions
-    -fno-rtti
-  )
+  target_compile_options(
+    v4vm
+    PRIVATE -Wall # Enable all warnings
+            -Wextra # Enable extra warnings
+            -fno-exceptions -fno-rtti)
   if(V4_OPTIMIZE_SIZE)
     target_compile_options(v4vm PRIVATE -Os)
+  endif()
+endif()
+
+# Enable LTO if supported and requested
+if(V4_ENABLE_LTO)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output)
+  if(ipo_supported)
+    set_target_properties(v4vm PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+    message(STATUS "LTO enabled for v4vm")
+  else()
+    message(WARNING "LTO not supported: ${ipo_output}")
   endif()
 endif()
 
@@ -66,11 +72,8 @@ endif()
 if(V4_ENABLE_MOCK_HAL)
   add_library(mock_hal STATIC tests/mock_hal.cpp)
 
-  target_include_directories(mock_hal
-    PUBLIC
-      ${PROJECT_SOURCE_DIR}/include
-      ${PROJECT_SOURCE_DIR}/tests
-  )
+  target_include_directories(mock_hal PUBLIC ${PROJECT_SOURCE_DIR}/include
+                                             ${PROJECT_SOURCE_DIR}/tests)
 
   # Export mock_hal as an alias for easier linking
   add_library(V4::mock_hal ALIAS mock_hal)
@@ -80,8 +83,8 @@ endif()
 # Tools
 # ============================================================================
 
-# NOTE: v4repl tool has been moved to a separate repository
-# V4_BUILD_TOOLS option is kept for future tools
+# NOTE: v4repl tool has been moved to a separate repository V4_BUILD_TOOLS option is kept
+# for future tools
 
 # ============================================================================
 # Tests
@@ -131,18 +134,20 @@ endif()
 # ============================================================================
 
 # Install headers
-install(DIRECTORY include/v4
+install(
+  DIRECTORY include/v4
   DESTINATION include
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-)
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp")
 
 # Install library
-install(TARGETS v4vm
+install(
+  TARGETS v4vm
   EXPORT V4VMTargets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
+  RUNTIME DESTINATION bin)
 
 # ============================================================================
 # Summary
