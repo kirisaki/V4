@@ -19,6 +19,15 @@ static inline void st_le32(uint8_t *p, v4_u32 v)
   p[2] = (uint8_t)((v >> 16) & 0xFF);
   p[3] = (uint8_t)((v >> 24) & 0xFF);
 }
+static inline uint16_t ld_le16(const uint8_t *p)
+{
+  return (uint16_t)p[0] | ((uint16_t)p[1] << 8);
+}
+static inline void st_le16(uint8_t *p, uint16_t v)
+{
+  p[0] = (uint8_t)(v & 0xFF);
+  p[1] = (uint8_t)((v >> 8) & 0xFF);
+}
 
 /* ---- MMIO window lookup (linear) ---- */
 static int find_mmio(Vm *vm, v4_u32 addr)
@@ -86,6 +95,57 @@ v4_err v4_mem_write32_core(Vm *vm, v4_u32 addr, v4_u32 val)
 
   // 4) Store
   st_le32(&vm->mem[addr], val);
+  return 0;
+}
+
+/* ---- 8-bit and 16-bit accessors ---- */
+v4_err v4_mem_read8_core(Vm *vm, v4_u32 addr, v4_u32 *out)
+{
+  // No MMIO support for 8-bit access (could be added if needed)
+  // RAM range check
+  if (int e = v4_is_in_ram(vm, addr, 1))
+    return e;
+
+  // Load byte (unsigned)
+  *out = (v4_u32)vm->mem[addr];
+  return 0;
+}
+
+v4_err v4_mem_read16_core(Vm *vm, v4_u32 addr, v4_u32 *out)
+{
+  // No MMIO support for 16-bit access (could be added if needed)
+  // RAM range check
+  if (int e = v4_is_in_ram(vm, addr, 2))
+    return e;
+
+  // No alignment requirement for 16-bit access
+  // Load 16-bit (unsigned, little-endian)
+  *out = (v4_u32)ld_le16(&vm->mem[addr]);
+  return 0;
+}
+
+v4_err v4_mem_write8_core(Vm *vm, v4_u32 addr, v4_u32 val)
+{
+  // No MMIO support for 8-bit access
+  // RAM range check
+  if (int e = v4_is_in_ram(vm, addr, 1))
+    return e;
+
+  // Store byte
+  vm->mem[addr] = (uint8_t)(val & 0xFF);
+  return 0;
+}
+
+v4_err v4_mem_write16_core(Vm *vm, v4_u32 addr, v4_u32 val)
+{
+  // No MMIO support for 16-bit access
+  // RAM range check
+  if (int e = v4_is_in_ram(vm, addr, 2))
+    return e;
+
+  // No alignment requirement for 16-bit access
+  // Store 16-bit (little-endian)
+  st_le16(&vm->mem[addr], (uint16_t)(val & 0xFFFF));
   return 0;
 }
 

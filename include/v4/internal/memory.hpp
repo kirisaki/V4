@@ -12,6 +12,11 @@
 v4_err v4_mem_read32_core(Vm *vm, v4_u32 addr, v4_u32 *out);
 v4_err v4_mem_write32_core(Vm *vm, v4_u32 addr, v4_u32 val);
 
+v4_err v4_mem_read8_core(Vm *vm, v4_u32 addr, v4_u32 *out);
+v4_err v4_mem_read16_core(Vm *vm, v4_u32 addr, v4_u32 *out);
+v4_err v4_mem_write8_core(Vm *vm, v4_u32 addr, v4_u32 val);
+v4_err v4_mem_write16_core(Vm *vm, v4_u32 addr, v4_u32 val);
+
 /* Alignment check (4-byte). Returns 0 or -12 (Unaligned). */
 static inline v4_err v4_is_aligned4(v4_u32 addr)
 {

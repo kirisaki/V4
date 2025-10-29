@@ -589,6 +589,94 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         break;
       }
 
+      case v4::Op::LOAD8U:
+      {
+        v4_i32 addr_i32;
+        if (v4_err e = ds_pop(vm, &addr_i32))
+          return e;
+        v4_u32 addr = (v4_u32)addr_i32;
+        v4_u32 val = 0;
+        if (v4_err e = v4_mem_read8_core(vm, addr, &val))
+          return e;
+        if (v4_err e = ds_push(vm, (v4_i32)val))
+          return e;
+        break;
+      }
+
+      case v4::Op::LOAD16U:
+      {
+        v4_i32 addr_i32;
+        if (v4_err e = ds_pop(vm, &addr_i32))
+          return e;
+        v4_u32 addr = (v4_u32)addr_i32;
+        v4_u32 val = 0;
+        if (v4_err e = v4_mem_read16_core(vm, addr, &val))
+          return e;
+        if (v4_err e = ds_push(vm, (v4_i32)val))
+          return e;
+        break;
+      }
+
+      case v4::Op::STORE8:
+      {
+        v4_i32 addr_i32, val_i32;
+        if (v4_err e = ds_pop(vm, &addr_i32))
+          return e;
+        if (v4_err e = ds_pop(vm, &val_i32))
+          return e;
+        v4_u32 addr = (v4_u32)addr_i32;
+        v4_u32 val = (v4_u32)val_i32;
+        if (v4_err e = v4_mem_write8_core(vm, addr, val))
+          return e;
+        break;
+      }
+
+      case v4::Op::STORE16:
+      {
+        v4_i32 addr_i32, val_i32;
+        if (v4_err e = ds_pop(vm, &addr_i32))
+          return e;
+        if (v4_err e = ds_pop(vm, &val_i32))
+          return e;
+        v4_u32 addr = (v4_u32)addr_i32;
+        v4_u32 val = (v4_u32)val_i32;
+        if (v4_err e = v4_mem_write16_core(vm, addr, val))
+          return e;
+        break;
+      }
+
+      case v4::Op::LOAD8S:
+      {
+        v4_i32 addr_i32;
+        if (v4_err e = ds_pop(vm, &addr_i32))
+          return e;
+        v4_u32 addr = (v4_u32)addr_i32;
+        v4_u32 val = 0;
+        if (v4_err e = v4_mem_read8_core(vm, addr, &val))
+          return e;
+        // Sign-extend 8-bit to 32-bit
+        int8_t val_i8 = (int8_t)(val & 0xFF);
+        if (v4_err e = ds_push(vm, (v4_i32)val_i8))
+          return e;
+        break;
+      }
+
+      case v4::Op::LOAD16S:
+      {
+        v4_i32 addr_i32;
+        if (v4_err e = ds_pop(vm, &addr_i32))
+          return e;
+        v4_u32 addr = (v4_u32)addr_i32;
+        v4_u32 val = 0;
+        if (v4_err e = v4_mem_read16_core(vm, addr, &val))
+          return e;
+        // Sign-extend 16-bit to 32-bit
+        int16_t val_i16 = (int16_t)(val & 0xFFFF);
+        if (v4_err e = ds_push(vm, (v4_i32)val_i16))
+          return e;
+        break;
+      }
+
       /* -------- Return stack operations -------- */
       case v4::Op::TOR:
       {
