@@ -87,14 +87,6 @@ static inline v4_err ds_peek(const Vm* vm, int i, v4_i32* out)
   return static_cast<v4_err>(Err::OK);
 }
 
-static inline v4_err ds_poke(Vm* vm, int i, v4_i32 v)
-{
-  if (vm->sp - 1 - i < vm->DS)
-    return static_cast<v4_err>(Err::StackUnderflow);
-  *(vm->sp - 1 - i) = v;
-  return static_cast<v4_err>(Err::OK);
-}
-
 /* ========================== Return stack helpers ========================= */
 
 static inline v4_err rs_push(Vm* vm, v4_i32 v)

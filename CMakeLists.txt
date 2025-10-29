@@ -17,7 +17,7 @@ option(V4_BUILD_TESTS "Build unit tests" ON)
 option(V4_BUILD_TOOLS "Build command-line tools" ON)
 option(V4_ENABLE_MOCK_HAL "Build with mock HAL (required for tests)" ON)
 option(V4_OPTIMIZE_SIZE "Optimize for size (-Os)" ON)
-option(V4_ENABLE_LTO "Enable Link Time Optimization" ON)
+option(V4_ENABLE_LTO "Enable Link Time Optimization (not compatible with sanitizers)" OFF)
 
 # ============================================================================
 # Core VM Library

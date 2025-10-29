@@ -31,14 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test coverage for all 31 new opcodes
 
 ### Changed
-- Link Time Optimization (LTO) now enabled by default in release builds
-  - 35% size reduction in core VM code (23KB → 15KB stripped)
-  - Controlled by V4_ENABLE_LTO CMake option
 - Local variables stored in return stack with frame pointer for efficient access
 
 ### Added (Build System)
-- V4_ENABLE_LTO option to control Link Time Optimization (default: ON)
-- IPO (Interprocedural Optimization) support detection via CheckIPOSupported
+- V4_ENABLE_LTO option to enable Link Time Optimization (default: OFF)
+  - 35% size reduction in core VM code (23KB → 15KB stripped) when enabled
+  - IPO (Interprocedural Optimization) support detection via CheckIPOSupported
+  - Note: LTO is not compatible with sanitizers (AddressSanitizer, UndefinedBehaviorSanitizer)
 
 ## [0.3.0] - 2025-10-28
 

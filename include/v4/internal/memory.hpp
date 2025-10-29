@@ -26,7 +26,6 @@ static inline v4_err v4_is_aligned4(v4_u32 addr)
 /* Range check within RAM. Returns 0 or -13 (OobMemory). */
 static inline v4_err v4_is_in_ram(Vm *vm, v4_u32 addr, v4_u32 bytes)
 {
-  uint64_t a = addr;
   uint64_t b = (uint64_t)addr + (uint64_t)bytes;
   return (vm->mem && b <= (uint64_t)vm->mem_size) ? 0 : -13;
 }
