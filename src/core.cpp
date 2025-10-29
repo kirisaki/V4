@@ -904,8 +904,20 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         if (!word->code || word->code_len <= 0)
           return V4_ERR(InvalidArg);
 
+        // Save current frame pointer (for nested calls)
+        v4_i32* old_fp = vm->fp;
+
+        // Set new frame pointer to current return stack position
+        // This allows local variables to be accessed relative to the frame base
+        vm->fp = vm->rp;
+
         // Execute the called word
-        if (v4_err e = vm_exec_raw(vm, word->code, word->code_len))
+        v4_err e = vm_exec_raw(vm, word->code, word->code_len);
+
+        // Restore frame pointer after call returns
+        vm->fp = old_fp;
+
+        if (e)
           return e;
         break;
       }
