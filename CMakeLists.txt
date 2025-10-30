@@ -16,8 +16,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(V4_BUILD_TESTS "Build unit tests" ON)
 option(V4_BUILD_TOOLS "Build command-line tools" ON)
 option(V4_ENABLE_MOCK_HAL "Build with mock HAL (required for tests)" ON)
+option(V4_USE_V4HAL "Use V4-hal C++17 CRTP implementation" OFF)
 option(V4_OPTIMIZE_SIZE "Optimize for size (-Os)" ON)
 option(V4_ENABLE_LTO "Enable Link Time Optimization (not compatible with sanitizers)" OFF)
+
+# V4-hal path configuration
+set(V4HAL_LOCAL_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/../V4-hal"
+    CACHE PATH "Path to local V4-hal source")
 
 # ============================================================================
 # Core VM Library
@@ -77,6 +83,33 @@ if(V4_ENABLE_MOCK_HAL)
 
   # Export mock_hal as an alias for easier linking
   add_library(V4::mock_hal ALIAS mock_hal)
+endif()
+
+# ============================================================================
+# V4-hal Integration (C++17 CRTP HAL implementation)
+# ============================================================================
+
+if(V4_USE_V4HAL)
+  include(FetchContent)
+
+  if(EXISTS "${V4HAL_LOCAL_PATH}/CMakeLists.txt")
+    message(STATUS "Using local V4-hal from: ${V4HAL_LOCAL_PATH}")
+    add_subdirectory(${V4HAL_LOCAL_PATH} ${CMAKE_BINARY_DIR}/v4hal)
+  else()
+    message(STATUS "Fetching V4-hal from repository")
+    fetchcontent_declare(
+      v4hal
+      GIT_REPOSITORY https://github.com/kirisaki/V4-hal.git
+      GIT_TAG v0.1.0)
+    fetchcontent_makeavailable(v4hal)
+  endif()
+
+  # Create v4_hal_* wrapper for V4-hal's hal_* API
+  add_library(v4_hal_wrapper STATIC src/hal_wrapper.cpp)
+  target_link_libraries(v4_hal_wrapper PUBLIC v4-hal-lib)
+  target_include_directories(v4_hal_wrapper PUBLIC ${PROJECT_SOURCE_DIR}/include)
+
+  message(STATUS "V4-hal C++17 CRTP implementation enabled")
 endif()
 
 # ============================================================================
@@ -161,5 +194,6 @@ message(STATUS "  C++ standard:         ${CMAKE_CXX_STANDARD}")
 message(STATUS "  Build tests:          ${V4_BUILD_TESTS}")
 message(STATUS "  Build tools:          ${V4_BUILD_TOOLS}")
 message(STATUS "  Enable mock HAL:      ${V4_ENABLE_MOCK_HAL}")
+message(STATUS "  Use V4-hal (C++17):   ${V4_USE_V4HAL}")
 message(STATUS "  Optimize for size:    ${V4_OPTIMIZE_SIZE}")
 message(STATUS "")

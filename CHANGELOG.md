@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- V4-hal C++17 CRTP HAL implementation integration
+  - Optional V4-hal library support via `V4_USE_V4HAL` option
+  - Local path reference (`V4HAL_LOCAL_PATH`) or FetchContent from GitHub
+  - Bridge layer (`src/hal_wrapper.cpp`) mapping `v4_hal_*` to V4-hal's `hal_*` API
+  - Zero-cost abstraction benefits from C++17 CRTP architecture
+  - Backward compatible with existing `v4_hal_*` API
+  - All existing tests pass with V4-hal enabled
+
 ## [0.4.1] - 2025-10-29
 
 ### Changed

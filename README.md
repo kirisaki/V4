@@ -17,10 +17,33 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ```
 
+### Building with V4-hal (C++17 CRTP HAL)
+
+V4 can optionally use the [V4-hal](https://github.com/kirisaki/V4-hal) C++17 CRTP implementation for zero-cost hardware abstraction:
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DV4_USE_V4HAL=ON
+cmake --build build -j
+```
+
+This provides:
+- Zero-cost abstraction via compile-time polymorphism
+- Platform support: POSIX, ESP32, CH32V203
+- Minimal runtime footprint (~5.7KB for GPIO+Timer)
+- Backward compatible with existing `v4_hal_*` API
+
 ## Testing
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Debug -DV4_BUILD_TESTS=ON
+cmake --build build -j
+cd build && ctest --output-on-failure
+```
+
+### Testing with V4-hal
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Debug -DV4_BUILD_TESTS=ON -DV4_USE_V4HAL=ON
 cmake --build build -j
 cd build && ctest --output-on-failure
 ```
