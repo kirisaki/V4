@@ -23,6 +23,10 @@ install_manifest.txt
 *.dll
 *.exe
 
+# Bare-metal binaries
+*.elf
+*.bin
+
 # IDE
 .vscode/
 .idea/

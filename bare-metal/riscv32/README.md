@@ -70,6 +70,15 @@ To integrate V4 VM into the bare-metal environment, the following is needed:
    - Register simple words (e.g., ADD, MUL)
    - Execute bytecode and verify results via UART
 
+### Note on V4-hal
+
+V4 now supports [V4-hal](https://github.com/kirisaki/V4-hal), a C++17 CRTP HAL implementation. However:
+- **bare-metal builds do NOT use V4-hal** (independent Makefile-based build)
+- V4-hal is CMake-based and optional (`-DV4_USE_V4HAL=ON`)
+- For bare-metal RISC-V, you'll need platform-specific HAL implementation:
+  - Direct MMIO access (as in current `uart.h`)
+  - Or create V4-hal RISC-V bare-metal port in `V4-hal/ports/riscv32/`
+
 ### Example V4 Integration (main.c)
 
 The `main.c` file contains a template for V4 VM integration:
