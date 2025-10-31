@@ -4,6 +4,7 @@
 #include "doctest.h"
 #include "mock_hal.h"
 #include "v4/errors.hpp"
+#include "v4/hal.h"
 #include "v4/internal/vm.h"
 #include "v4/opcodes.hpp"
 #include "v4/sys_ids.h"
@@ -72,7 +73,7 @@ TEST_CASE("SYS GPIO_WRITE and GPIO_READ")
   vm_reset(&vm);
 
   // First init pin 10 as output
-  v4_hal_gpio_init(10, V4_HAL_GPIO_MODE_OUTPUT);
+  hal_gpio_mode(10, HAL_GPIO_OUTPUT);
 
   v4_u8 code[64];
   int k = 0;
@@ -150,7 +151,8 @@ TEST_CASE("SYS UART_GETC")
   mock_hal_reset();
 
   // Init UART and inject data
-  v4_hal_uart_init(0, 115200);
+  hal_uart_config_t config = {115200, 8, 1, 0};
+  hal_uart_open(0, &config);
   mock_hal_uart_inject_rx(0, "X", 1);
 
   Vm vm{};

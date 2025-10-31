@@ -1,0 +1,26 @@
+/**
+ * @file hal_errors.def
+ * @brief Error code definitions for V4 HAL
+ *
+ * This file defines all HAL error codes using X-macro pattern.
+ * Include this file with HAL_ERR macro defined.
+ *
+ * Usage:
+ *   #define HAL_ERR(name, val, desc) ...
+ *   #include "hal_errors.def"
+ *   #undef HAL_ERR
+ *
+ * Parameters:
+ *   name - Error name (without HAL_ERR_ prefix)
+ *   val  - Error code value
+ *   desc - Human-readable description
+ */
+
+HAL_ERR(OK,      0,  "Success")
+HAL_ERR(PARAM,  -1,  "Invalid parameter")
+HAL_ERR(BUSY,   -2,  "Resource busy")
+HAL_ERR(TIMEOUT,-3,  "Operation timed out")
+HAL_ERR(NODEV,  -4,  "Device not found")
+HAL_ERR(NOMEM,  -5,  "Out of memory")
+HAL_ERR(NOTSUP, -6,  "Feature not supported")
+HAL_ERR(IO,     -7,  "I/O error")

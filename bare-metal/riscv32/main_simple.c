@@ -1,5 +1,6 @@
-#include "uart.h"
 #include <stdint.h>
+
+#include "uart.h"
 
 /* Simple integer to string conversion (for positive numbers only) */
 static void print_int(int32_t n)

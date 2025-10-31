@@ -6,11 +6,11 @@
 #define UART_BASE 0x10000000
 
 /* UART registers */
-#define UART_THR (UART_BASE + 0)  /* Transmit Holding Register */
-#define UART_LSR (UART_BASE + 5)  /* Line Status Register */
+#define UART_THR (UART_BASE + 0) /* Transmit Holding Register */
+#define UART_LSR (UART_BASE + 5) /* Line Status Register */
 
 /* LSR bits */
-#define UART_LSR_THRE (1 << 5)  /* Transmit Holding Register Empty */
+#define UART_LSR_THRE (1 << 5) /* Transmit Holding Register Empty */
 
 static inline void uart_putc(char c)
 {

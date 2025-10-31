@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "v4/v4_hal.h"
+#include "v4/hal.h"
 
 /**
  * @file mock_hal.cpp
@@ -22,8 +22,8 @@
 struct MockGpioState
 {
   int initialized;
-  v4_hal_gpio_mode mode;
-  int value;
+  hal_gpio_mode_t mode;
+  hal_gpio_value_t value;
 };
 
 struct MockUartState
@@ -97,17 +97,17 @@ extern "C" const char* mock_hal_uart_get_tx(int port, int* out_len)
   return mock_uart[port].tx_buffer;
 }
 
-extern "C" int mock_hal_gpio_get_value(int pin)
+extern "C" hal_gpio_value_t mock_hal_gpio_get_value(int pin)
 {
   if (pin < 0 || pin >= MAX_GPIO_PINS)
-    return -1;
+    return HAL_GPIO_LOW;
   return mock_gpio[pin].value;
 }
 
-extern "C" v4_hal_gpio_mode mock_hal_gpio_get_mode(int pin)
+extern "C" hal_gpio_mode_t mock_hal_gpio_get_mode(int pin)
 {
   if (pin < 0 || pin >= MAX_GPIO_PINS)
-    return V4_HAL_GPIO_MODE_INPUT;
+    return HAL_GPIO_INPUT;
   return mock_gpio[pin].mode;
 }
 
@@ -132,165 +132,155 @@ extern "C" const char* mock_hal_console_get_output(int* out_len)
 /* GPIO API                                                                  */
 /* ------------------------------------------------------------------------- */
 
-extern "C" v4_err v4_hal_gpio_init(int pin, v4_hal_gpio_mode mode)
+extern "C" int hal_gpio_mode(int pin, hal_gpio_mode_t mode)
 {
   if (pin < 0 || pin >= MAX_GPIO_PINS)
-    return -13;  // OutOfBounds
+    return HAL_ERR_PARAM;
 
   mock_gpio[pin].initialized = 1;
   mock_gpio[pin].mode = mode;
-  mock_gpio[pin].value = 0;
-  return 0;
+  mock_gpio[pin].value = HAL_GPIO_LOW;
+  return HAL_OK;
 }
 
-extern "C" v4_err v4_hal_gpio_write(int pin, int value)
+extern "C" int hal_gpio_write(int pin, hal_gpio_value_t value)
 {
   if (pin < 0 || pin >= MAX_GPIO_PINS)
-    return -13;  // OutOfBounds
+    return HAL_ERR_PARAM;
 
   if (!mock_gpio[pin].initialized)
-    return -2;  // NotInitialized
+    return HAL_ERR_PARAM;
 
-  if (mock_gpio[pin].mode != V4_HAL_GPIO_MODE_OUTPUT)
-    return -1;  // InvalidArg
+  if (mock_gpio[pin].mode != HAL_GPIO_OUTPUT && mock_gpio[pin].mode != HAL_GPIO_OUTPUT_OD)
+    return HAL_ERR_PARAM;
 
-  mock_gpio[pin].value = value ? 1 : 0;
-  return 0;
+  mock_gpio[pin].value = value;
+  return HAL_OK;
 }
 
-extern "C" v4_err v4_hal_gpio_read(int pin, int* out_value)
+extern "C" int hal_gpio_read(int pin, hal_gpio_value_t* out_value)
 {
   if (pin < 0 || pin >= MAX_GPIO_PINS)
-    return -13;  // OutOfBounds
+    return HAL_ERR_PARAM;
 
   if (!mock_gpio[pin].initialized)
-    return -2;  // NotInitialized
+    return HAL_ERR_PARAM;
 
   if (!out_value)
-    return -1;  // InvalidArg
+    return HAL_ERR_PARAM;
 
   *out_value = mock_gpio[pin].value;
-  return 0;
+  return HAL_OK;
 }
 
 /* ------------------------------------------------------------------------- */
 /* UART API                                                                  */
 /* ------------------------------------------------------------------------- */
 
-extern "C" v4_err v4_hal_uart_init(int port, int baudrate)
+extern "C" hal_handle_t hal_uart_open(int port, const hal_uart_config_t* config)
 {
   if (port < 0 || port >= MAX_UART_PORTS)
-    return -13;  // OutOfBounds
+    return nullptr;
 
-  if (baudrate <= 0)
-    return -1;  // InvalidArg
+  if (!config || config->baudrate <= 0)
+    return nullptr;
 
   mock_uart[port].initialized = 1;
-  mock_uart[port].baudrate = baudrate;
+  mock_uart[port].baudrate = config->baudrate;
   mock_uart[port].tx_count = 0;
   mock_uart[port].rx_count = 0;
   mock_uart[port].rx_pos = 0;
-  return 0;
+
+  return &mock_uart[port];
 }
 
-extern "C" v4_err v4_hal_uart_putc(int port, char c)
+extern "C" int hal_uart_close(hal_handle_t handle)
 {
-  if (port < 0 || port >= MAX_UART_PORTS)
-    return -13;  // OutOfBounds
+  if (!handle)
+    return HAL_ERR_PARAM;
 
-  if (!mock_uart[port].initialized)
-    return -2;  // NotInitialized
-
-  if (mock_uart[port].tx_count >= UART_BUFFER_SIZE)
-    return -4;  // Busy
-
-  mock_uart[port].tx_buffer[mock_uart[port].tx_count++] = c;
-  return 0;
+  MockUartState* uart = static_cast<MockUartState*>(handle);
+  uart->initialized = 0;
+  return HAL_OK;
 }
 
-extern "C" v4_err v4_hal_uart_getc(int port, char* out_c)
+extern "C" int hal_uart_write(hal_handle_t handle, const uint8_t* buf, size_t len)
 {
-  if (port < 0 || port >= MAX_UART_PORTS)
-    return -13;  // OutOfBounds
+  if (!handle || !buf)
+    return HAL_ERR_PARAM;
 
-  if (!mock_uart[port].initialized)
-    return -2;  // NotInitialized
+  MockUartState* uart = static_cast<MockUartState*>(handle);
 
-  if (!out_c)
-    return -1;  // InvalidArg
+  if (!uart->initialized)
+    return HAL_ERR_PARAM;
 
-  if (mock_uart[port].rx_pos >= mock_uart[port].rx_count)
-    return -3;  // Timeout (no data)
-
-  *out_c = mock_uart[port].rx_buffer[mock_uart[port].rx_pos++];
-  return 0;
-}
-
-extern "C" v4_err v4_hal_uart_write(int port, const char* buf, int len)
-{
-  if (port < 0 || port >= MAX_UART_PORTS)
-    return -13;  // OutOfBounds
-
-  if (!mock_uart[port].initialized)
-    return -2;  // NotInitialized
-
-  if (!buf || len < 0)
-    return -1;  // InvalidArg
-
-  for (int i = 0; i < len; i++)
+  size_t written = 0;
+  for (size_t i = 0; i < len; i++)
   {
-    if (mock_uart[port].tx_count >= UART_BUFFER_SIZE)
-      return -4;  // Busy
+    if (uart->tx_count >= UART_BUFFER_SIZE)
+      break;
 
-    mock_uart[port].tx_buffer[mock_uart[port].tx_count++] = buf[i];
+    uart->tx_buffer[uart->tx_count++] = buf[i];
+    written++;
   }
 
-  return 0;
+  return written;
 }
 
-extern "C" v4_err v4_hal_uart_read(int port, char* buf, int max_len, int* out_len)
+extern "C" int hal_uart_read(hal_handle_t handle, uint8_t* buf, size_t len)
 {
-  if (port < 0 || port >= MAX_UART_PORTS)
-    return -13;  // OutOfBounds
+  if (!handle || !buf)
+    return HAL_ERR_PARAM;
 
-  if (!mock_uart[port].initialized)
-    return -2;  // NotInitialized
+  MockUartState* uart = static_cast<MockUartState*>(handle);
 
-  if (!buf || !out_len || max_len < 0)
-    return -1;  // InvalidArg
+  if (!uart->initialized)
+    return HAL_ERR_PARAM;
 
-  int available = mock_uart[port].rx_count - mock_uart[port].rx_pos;
-  int to_read = (available < max_len) ? available : max_len;
+  int available = uart->rx_count - uart->rx_pos;
+  size_t to_read = (available < (int)len) ? available : len;
 
-  memcpy(buf, mock_uart[port].rx_buffer + mock_uart[port].rx_pos, to_read);
-  mock_uart[port].rx_pos += to_read;
-  *out_len = to_read;
+  memcpy(buf, uart->rx_buffer + uart->rx_pos, to_read);
+  uart->rx_pos += to_read;
 
-  return 0;
+  return to_read;
+}
+
+extern "C" int hal_uart_available(hal_handle_t handle)
+{
+  if (!handle)
+    return HAL_ERR_PARAM;
+
+  MockUartState* uart = static_cast<MockUartState*>(handle);
+
+  if (!uart->initialized)
+    return HAL_ERR_PARAM;
+
+  return uart->rx_count - uart->rx_pos;
 }
 
 /* ------------------------------------------------------------------------- */
 /* Timer API                                                                 */
 /* ------------------------------------------------------------------------- */
 
-extern "C" uint32_t v4_hal_millis(void)
+extern "C" uint32_t hal_millis(void)
 {
   return mock_millis_counter;
 }
 
-extern "C" uint64_t v4_hal_micros(void)
+extern "C" uint64_t hal_micros(void)
 {
   return mock_micros_counter;
 }
 
-extern "C" void v4_hal_delay_ms(uint32_t ms)
+extern "C" void hal_delay_ms(uint32_t ms)
 {
   // Mock delay: just advance counter
   mock_millis_counter += ms;
   mock_micros_counter += ms * 1000ULL;
 }
 
-extern "C" void v4_hal_delay_us(uint32_t us)
+extern "C" void hal_delay_us(uint32_t us)
 {
   // Mock delay: just advance counter
   mock_micros_counter += us;
@@ -301,38 +291,34 @@ extern "C" void v4_hal_delay_us(uint32_t us)
 /* Console I/O API                                                           */
 /* ------------------------------------------------------------------------- */
 
-extern "C" v4_err v4_hal_putc(char c)
+extern "C" int hal_console_write(const uint8_t* buf, size_t len)
 {
-  if (mock_console.output_count >= CONSOLE_BUFFER_SIZE)
-    return -4;  // Busy
+  if (!buf)
+    return HAL_ERR_PARAM;
 
-  mock_console.output_buffer[mock_console.output_count++] = c;
-  return 0;
+  size_t written = 0;
+  for (size_t i = 0; i < len; i++)
+  {
+    if (mock_console.output_count >= CONSOLE_BUFFER_SIZE)
+      break;
+
+    mock_console.output_buffer[mock_console.output_count++] = buf[i];
+    written++;
+  }
+
+  return written;
 }
 
-extern "C" v4_err v4_hal_getc(char* out_c)
+extern "C" int hal_console_read(uint8_t* buf, size_t len)
 {
-  if (!out_c)
-    return -1;  // InvalidArg
+  if (!buf)
+    return HAL_ERR_PARAM;
 
-  if (mock_console.input_pos >= mock_console.input_count)
-    return -3;  // Timeout (no data)
+  size_t read_count = 0;
+  while (read_count < len && mock_console.input_pos < mock_console.input_count)
+  {
+    buf[read_count++] = mock_console.input_buffer[mock_console.input_pos++];
+  }
 
-  *out_c = mock_console.input_buffer[mock_console.input_pos++];
-  return 0;
-}
-
-/* ------------------------------------------------------------------------- */
-/* System API                                                                */
-/* ------------------------------------------------------------------------- */
-
-extern "C" void v4_hal_system_reset(void)
-{
-  // Mock reset: clear all state
-  mock_hal_reset();
-}
-
-extern "C" const char* v4_hal_system_info(void)
-{
-  return "Mock HAL v1.0";
+  return read_count;
 }

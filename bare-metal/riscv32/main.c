@@ -1,6 +1,7 @@
+#include <stdint.h>
+
 #include "uart.h"
 #include "v4/vm_api.h"
-#include <stdint.h>
 
 /* Simple integer to string conversion */
 static void print_int(int32_t n)
@@ -80,18 +81,18 @@ int main(void)
   int k = 0;
 
   /* LIT 10 */
-  emit8(code, &k, 0x00);  /* Op::LIT */
+  emit8(code, &k, 0x00); /* Op::LIT */
   emit32(code, &k, 10);
 
   /* LIT 32 */
-  emit8(code, &k, 0x00);  /* Op::LIT */
+  emit8(code, &k, 0x00); /* Op::LIT */
   emit32(code, &k, 32);
 
   /* ADD */
-  emit8(code, &k, 0x10);  /* Op::ADD */
+  emit8(code, &k, 0x10); /* Op::ADD */
 
   /* RET */
-  emit8(code, &k, 0x51);  /* Op::RET */
+  emit8(code, &k, 0x51); /* Op::RET */
 
   int word_idx = vm_register_word(vm, NULL, code, k);
   if (word_idx < 0)
@@ -156,7 +157,7 @@ int main(void)
   emit32(code, &k, 6);
 
   /* MUL */
-  emit8(code, &k, 0x12);  /* Op::MUL */
+  emit8(code, &k, 0x12); /* Op::MUL */
 
   /* RET */
   emit8(code, &k, 0x51);

@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-11-01
+
+### Changed
+- **BREAKING**: Migrated HAL API from `v4/v4_hal.h` to `v4/hal.h`
+  - Complete migration to V4-hal library API
+  - Replaced `v4_hal_*` functions with `hal_*` equivalents
+  - Updated all SYS instruction implementations in VM core
+  - GPIO: `v4_hal_gpio_*` → `hal_gpio_*` with proper type casting
+  - UART: Character-based API → Buffer-based API with handle management
+  - Timer: `v4_hal_millis/micros/delay_*` → `hal_*`
+  - Console: `v4_hal_putc/getc` → `hal_console_write/read`
+
+### Added
+- UART handle management (static array for up to 4 ports)
+- Proper type casting for GPIO values (`hal_gpio_value_t`)
+- Comprehensive UART configuration with default 8N1 settings
+
+### Removed
+- Dependency on old `v4_hal.h` API
+
+### Note
+- System operations (`v4_hal_system_reset`, `v4_hal_system_info`) temporarily return `HAL_ERR_NOTSUP`
+- These will be implemented in V4-hal library in a future release
+
+### Tested
+- ESP32-C6 M5NanoC6 with v4-blink and v4-repl-demo examples
+
+## [0.6.0] - 2025-10-31
+
 ### Added
 - V4-hal C++17 CRTP HAL implementation integration
   - Optional V4-hal library support via `V4_USE_V4HAL` option
