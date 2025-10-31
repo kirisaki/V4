@@ -24,6 +24,10 @@
 #define V4_SYS_DELAY_MS 0x22 /**< Blocking delay in milliseconds */
 #define V4_SYS_DELAY_US 0x23 /**< Blocking delay in microseconds */
 
+/* Console I/O operations (0x30 - 0x3F) */
+#define V4_SYS_EMIT 0x30 /**< Output one character */
+#define V4_SYS_KEY 0x31  /**< Input one character (blocking) */
+
 /* System operations (0xF0 - 0xFF) */
 #define V4_SYS_SYSTEM_RESET 0xFE /**< Perform system reset */
 #define V4_SYS_SYSTEM_INFO 0xFF  /**< Get system info string */

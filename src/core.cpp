@@ -1062,6 +1062,30 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
             break;
           }
 
+          /* Console I/O operations */
+          case V4_SYS_EMIT:  // (c -- )
+          {
+            v4_i32 c;
+            if ((err = ds_pop(vm, &c)))
+              return err;
+
+            err = v4_hal_putc(static_cast<char>(c));
+            if ((err = ds_push(vm, err)))
+              return err;
+            break;
+          }
+
+          case V4_SYS_KEY:  // ( -- c)
+          {
+            char c;
+            v4_err hal_err = v4_hal_getc(&c);
+            if ((err = ds_push(vm, static_cast<v4_i32>(c))))
+              return err;
+            if ((err = ds_push(vm, hal_err)))
+              return err;
+            break;
+          }
+
           /* System operations */
           case V4_SYS_SYSTEM_RESET:  // ( -- )
           {

@@ -17,6 +17,7 @@
 #define MAX_GPIO_PINS 32
 #define MAX_UART_PORTS 4
 #define UART_BUFFER_SIZE 256
+#define CONSOLE_BUFFER_SIZE 256
 
 struct MockGpioState
 {
@@ -36,8 +37,18 @@ struct MockUartState
   int rx_pos;
 };
 
+struct MockConsoleState
+{
+  char output_buffer[CONSOLE_BUFFER_SIZE];
+  int output_count;
+  char input_buffer[CONSOLE_BUFFER_SIZE];
+  int input_count;
+  int input_pos;
+};
+
 static struct MockGpioState mock_gpio[MAX_GPIO_PINS];
 static struct MockUartState mock_uart[MAX_UART_PORTS];
+static struct MockConsoleState mock_console;
 static uint32_t mock_millis_counter = 0;
 static uint64_t mock_micros_counter = 0;
 
@@ -49,6 +60,7 @@ extern "C" void mock_hal_reset(void)
 {
   memset(mock_gpio, 0, sizeof(mock_gpio));
   memset(mock_uart, 0, sizeof(mock_uart));
+  memset(&mock_console, 0, sizeof(mock_console));
   mock_millis_counter = 0;
   mock_micros_counter = 0;
 }
@@ -97,6 +109,23 @@ extern "C" v4_hal_gpio_mode mock_hal_gpio_get_mode(int pin)
   if (pin < 0 || pin >= MAX_GPIO_PINS)
     return V4_HAL_GPIO_MODE_INPUT;
   return mock_gpio[pin].mode;
+}
+
+extern "C" void mock_hal_console_inject_input(const char* data, int len)
+{
+  if (len > CONSOLE_BUFFER_SIZE)
+    len = CONSOLE_BUFFER_SIZE;
+
+  memcpy(mock_console.input_buffer, data, len);
+  mock_console.input_count = len;
+  mock_console.input_pos = 0;
+}
+
+extern "C" const char* mock_hal_console_get_output(int* out_len)
+{
+  if (out_len)
+    *out_len = mock_console.output_count;
+  return mock_console.output_buffer;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -266,6 +295,31 @@ extern "C" void v4_hal_delay_us(uint32_t us)
   // Mock delay: just advance counter
   mock_micros_counter += us;
   mock_millis_counter += us / 1000;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Console I/O API                                                           */
+/* ------------------------------------------------------------------------- */
+
+extern "C" v4_err v4_hal_putc(char c)
+{
+  if (mock_console.output_count >= CONSOLE_BUFFER_SIZE)
+    return -4;  // Busy
+
+  mock_console.output_buffer[mock_console.output_count++] = c;
+  return 0;
+}
+
+extern "C" v4_err v4_hal_getc(char* out_c)
+{
+  if (!out_c)
+    return -1;  // InvalidArg
+
+  if (mock_console.input_pos >= mock_console.input_count)
+    return -3;  // Timeout (no data)
+
+  *out_c = mock_console.input_buffer[mock_console.input_pos++];
+  return 0;
 }
 
 /* ------------------------------------------------------------------------- */

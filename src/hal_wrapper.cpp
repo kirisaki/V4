@@ -178,6 +178,34 @@ extern "C" void v4_hal_delay_us(uint32_t us)
 }
 
 /* ========================================================================= */
+/* Console I/O API Mapping                                                   */
+/* ========================================================================= */
+
+extern "C" v4_err v4_hal_putc(char c)
+{
+  uint8_t byte = static_cast<uint8_t>(c);
+  int ret = hal_console_write(&byte, 1);
+  return (ret == 1) ? 0 : -1;
+}
+
+extern "C" v4_err v4_hal_getc(char* out_c)
+{
+  if (!out_c)
+  {
+    return -1;  // HAL_ERR_PARAM
+  }
+
+  uint8_t byte;
+  int ret = hal_console_read(&byte, 1);
+  if (ret == 1)
+  {
+    *out_c = static_cast<char>(byte);
+    return 0;
+  }
+  return -1;  // No data available or error
+}
+
+/* ========================================================================= */
 /* System API Mapping                                                        */
 /* ========================================================================= */
 

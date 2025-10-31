@@ -184,6 +184,34 @@ extern "C"
   void v4_hal_delay_us(uint32_t us);
 
   /* ------------------------------------------------------------------------- */
+  /* Console I/O API                                                           */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Output one character to the console
+   *
+   * Writes a single character to the standard output (console).
+   * This is typically used for interactive REPL or debug output.
+   * May block until the character is transmitted.
+   *
+   * @param c Character to output
+   * @return 0 on success, negative error code on failure
+   */
+  v4_err v4_hal_putc(char c);
+
+  /**
+   * @brief Input one character from the console
+   *
+   * Reads a single character from the standard input (console).
+   * This is blocking: waits until a character is available.
+   * Used for interactive REPL input.
+   *
+   * @param out_c Pointer to store the read character
+   * @return 0 on success, negative error code on failure
+   */
+  v4_err v4_hal_getc(char *out_c);
+
+  /* ------------------------------------------------------------------------- */
   /* System API (optional)                                                     */
   /* ------------------------------------------------------------------------- */
 

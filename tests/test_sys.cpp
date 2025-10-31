@@ -9,6 +9,10 @@
 #include "v4/sys_ids.h"
 #include "v4/vm_api.h"
 
+/* Mock HAL console control functions */
+extern "C" void mock_hal_console_inject_input(const char* data, int len);
+extern "C" const char* mock_hal_console_get_output(int* out_len);
+
 /* Helper to emit bytecode */
 static void emit8(v4_u8* code, int* k, v4_u8 byte)
 {
@@ -339,4 +343,110 @@ TEST_CASE("SYS error handling - invalid pin")
   CHECK(vm_ds_depth_public(&vm) == 1);
   v4_i32 hal_err = vm_ds_peek_public(&vm, 0);
   CHECK(hal_err == -13);  // OutOfBounds
+}
+
+TEST_CASE("SYS EMIT")
+{
+  mock_hal_reset();
+
+  Vm vm{};
+  vm_reset(&vm);
+
+  v4_u8 code[32];
+  int k = 0;
+
+  // Emit 'A' (65)
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, 65);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
+  emit8(code, &k, V4_SYS_EMIT);
+
+  // Drop error code
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
+
+  // Emit 'B' (66)
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, 66);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
+  emit8(code, &k, V4_SYS_EMIT);
+
+  // Drop error code
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
+
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
+
+  v4_err err = vm_exec_raw(&vm, code, k);
+  REQUIRE(err == 0);
+
+  // Check console output
+  int out_len = 0;
+  const char* output = mock_hal_console_get_output(&out_len);
+  REQUIRE(out_len == 2);
+  CHECK(output[0] == 'A');
+  CHECK(output[1] == 'B');
+}
+
+TEST_CASE("SYS KEY")
+{
+  mock_hal_reset();
+
+  // Inject input characters
+  mock_hal_console_inject_input("XY", 2);
+
+  Vm vm{};
+  vm_reset(&vm);
+
+  v4_u8 code[32];
+  int k = 0;
+
+  // Read first character
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
+  emit8(code, &k, V4_SYS_KEY);
+
+  // Drop error code
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
+
+  // Read second character
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
+  emit8(code, &k, V4_SYS_KEY);
+
+  // Drop error code
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
+
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
+
+  v4_err err = vm_exec_raw(&vm, code, k);
+  REQUIRE(err == 0);
+
+  // Stack: [first_char, second_char]
+  CHECK(vm_ds_depth_public(&vm) == 2);
+  CHECK(vm_ds_peek_public(&vm, 1) == 'X');
+  CHECK(vm_ds_peek_public(&vm, 0) == 'Y');
+}
+
+TEST_CASE("SYS KEY - no data available")
+{
+  mock_hal_reset();
+
+  // No input injected
+
+  Vm vm{};
+  vm_reset(&vm);
+
+  v4_u8 code[16];
+  int k = 0;
+
+  // Try to read character
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
+  emit8(code, &k, V4_SYS_KEY);
+
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
+
+  v4_err err = vm_exec_raw(&vm, code, k);
+  REQUIRE(err == 0);
+
+  // Stack: [char, err]
+  CHECK(vm_ds_depth_public(&vm) == 2);
+  v4_i32 hal_err = vm_ds_peek_public(&vm, 0);
+  CHECK(hal_err == -3);  // Timeout (no data)
 }
