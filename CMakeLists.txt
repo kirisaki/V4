@@ -99,7 +99,7 @@ if(V4_USE_V4HAL)
     message(STATUS "Fetching V4-hal from repository")
     fetchcontent_declare(
       v4hal
-      GIT_REPOSITORY https://github.com/kirisaki/V4-hal.git
+      GIT_REPOSITORY https://github.com/V4-project/V4-hal.git
       GIT_TAG v0.1.0)
     fetchcontent_makeavailable(v4hal)
   endif()
