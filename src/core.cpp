@@ -1010,12 +1010,12 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
               uart_handles[port] = nullptr;
             }
 
-            // Create UART config with default settings
+            // Create UART config with default settings (C++17 compatible)
             hal_uart_config_t config = {
-                .baudrate = baudrate,
-                .data_bits = 8,  // 8 data bits (standard)
-                .stop_bits = 1,  // 1 stop bit (standard)
-                .parity = 0,     // No parity (standard)
+                baudrate,  // baudrate
+                8,         // data_bits (standard)
+                1,         // stop_bits (standard)
+                0          // parity (no parity)
             };
 
             // Open UART and store handle
