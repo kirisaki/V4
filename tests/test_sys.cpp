@@ -307,15 +307,11 @@ TEST_CASE("SYS SYSTEM_INFO")
   v4_err err = vm_exec_raw(&vm, code, k);
   REQUIRE(err == 0);
 
-  // Stack: [addr, len]
-  CHECK(vm_ds_depth_public(&vm) == 2);
-  int len = vm_ds_peek_public(&vm, 0);
-  CHECK(len > 0);
-
-  // Can't easily verify addr without platform-specific code
-  // But we can check it's not NULL
-  v4_i32 addr_val = vm_ds_peek_public(&vm, 1);
-  CHECK(addr_val != 0);
+  // SYSTEM_INFO returns HAL_ERR_NOTSUP (-6) in new HAL API
+  // Stack: [0, 0, err]
+  CHECK(vm_ds_depth_public(&vm) == 3);
+  v4_i32 hal_err = vm_ds_peek_public(&vm, 0);
+  CHECK(hal_err == HAL_ERR_NOTSUP);  // -6
 }
 
 TEST_CASE("SYS error handling - invalid pin")
@@ -344,7 +340,7 @@ TEST_CASE("SYS error handling - invalid pin")
   // Should have error code on stack
   CHECK(vm_ds_depth_public(&vm) == 1);
   v4_i32 hal_err = vm_ds_peek_public(&vm, 0);
-  CHECK(hal_err == -13);  // OutOfBounds
+  CHECK(hal_err == HAL_ERR_PARAM);  // -1 (invalid parameter)
 }
 
 TEST_CASE("SYS EMIT")
@@ -448,7 +444,8 @@ TEST_CASE("SYS KEY - no data available")
   REQUIRE(err == 0);
 
   // Stack: [char, err]
+  // In new HAL API, hal_console_read returns 0 when no data available (not an error)
   CHECK(vm_ds_depth_public(&vm) == 2);
   v4_i32 hal_err = vm_ds_peek_public(&vm, 0);
-  CHECK(hal_err == -3);  // Timeout (no data)
+  CHECK(hal_err == HAL_OK);  // 0 (success, but 0 bytes read)
 }
