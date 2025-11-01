@@ -153,6 +153,9 @@ if(V4_BUILD_TESTS)
     # HAL/System Tests
     add_v4_test(test_sys tests/test_sys.cpp)
 
+    # API Extension Tests
+    add_v4_test(test_api_extensions tests/test_api_extensions.cpp)
+
     # C API Tests
     add_executable(test_vm_c tests/test_vm_c.c)
     target_include_directories(test_vm_c PRIVATE ${PROJECT_SOURCE_DIR}/include)

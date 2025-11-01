@@ -1248,6 +1248,22 @@ extern "C" Word* vm_get_word(Vm* vm, int idx)
   return &vm->words[idx];
 }
 
+extern "C" int vm_find_word(Vm* vm, const char* name)
+{
+  if (!vm || !name)
+    return -1;
+
+  for (int i = 0; i < vm->word_count; i++)
+  {
+    if (vm->words[i].name && strcmp(vm->words[i].name, name) == 0)
+    {
+      return i;
+    }
+  }
+
+  return -1;  // Not found
+}
+
 /* =========================== Public API entry ============================ */
 
 extern "C" v4_err vm_exec(Vm* vm, Word* entry)

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- REPL/debugger support API: `vm_find_word()` for searching words by name
+  - Case-sensitive linear search through word dictionary
+  - Returns word index (>=0) on success, negative value on failure
+  - Enables external tools (V4-front, V4-cli) to lookup words without maintaining separate mappings
+  - Comprehensive test coverage in `test_api_extensions.cpp`
+
 ## [0.7.0] - 2025-11-01
 
 ### Changed

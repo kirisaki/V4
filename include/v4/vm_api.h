@@ -163,6 +163,26 @@ extern "C"
    */
   struct Word *vm_get_word(struct Vm *vm, int idx);
 
+  /**
+   * @brief Find a word by name in the VM's dictionary.
+   *
+   * Searches the registered words for one matching the specified name.
+   * The search is case-sensitive and uses linear search O(n).
+   * For typical word counts (tens to hundreds), this is sufficiently fast.
+   *
+   * @param vm    VM instance (must not be NULL).
+   * @param name  Word name to search for (must not be NULL).
+   * @return Word index (>= 0) if found, negative value if not found or on error.
+   *
+   * @example
+   * int idx = vm_find_word(vm, "SQUARE");
+   * if (idx >= 0) {
+   *     Word* word = vm_get_word(vm, idx);
+   *     vm_exec(vm, word);
+   * }
+   */
+  int vm_find_word(struct Vm *vm, const char *name);
+
   /* ------------------------------------------------------------------------- */
   /* MMIO registration and direct memory access                                */
   /* ------------------------------------------------------------------------- */
