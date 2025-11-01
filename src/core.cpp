@@ -1294,6 +1294,20 @@ extern "C" v4_i32 vm_ds_peek_public(struct Vm* vm, int index_from_top)
 
   return vm->sp[-1 - index_from_top];
 }
+
+extern "C" int vm_ds_copy_to_array(struct Vm* vm, v4_i32* out_array, int max_count)
+{
+  if (!vm || !out_array || max_count <= 0)
+    return 0;
+
+  int depth = static_cast<int>(vm->sp - vm->DS);
+  int copy_count = (depth < max_count) ? depth : max_count;
+
+  // Copy stack from bottom to top
+  std::memcpy(out_array, vm->DS, copy_count * sizeof(v4_i32));
+
+  return copy_count;
+}
 /* ===================== Stack manipulation API ============================ */
 
 extern "C" v4_err vm_ds_push(struct Vm* vm, v4_i32 value)

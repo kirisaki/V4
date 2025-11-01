@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Returns word index (>=0) on success, negative value on failure
   - Enables external tools (V4-front, V4-cli) to lookup words without maintaining separate mappings
   - Comprehensive test coverage in `test_api_extensions.cpp`
+- REPL/debugger support API: `vm_ds_copy_to_array()` for bulk data stack retrieval
+  - Efficient one-shot copy of entire stack to array (bottom to top)
+  - Supports partial copy when max_count < stack depth
+  - NULL-safe parameter validation
+  - Enables efficient stack display and V4-link protocol stack transfers
 
 ## [0.7.0] - 2025-11-01
 

@@ -90,3 +90,90 @@ TEST_CASE("vm_find_word - multiple words with similar names")
   CHECK(vm_find_word(&vm, "ADDR") == 1);
   CHECK(vm_find_word(&vm, "ADD1") == 2);
 }
+
+// ============================================================================
+// vm_ds_copy_to_array() tests
+// ============================================================================
+
+TEST_CASE("vm_ds_copy_to_array - basic copy")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  // Push values onto stack
+  vm_ds_push(&vm, 10);
+  vm_ds_push(&vm, 20);
+  vm_ds_push(&vm, 30);
+
+  v4_i32 stack[256];
+  int count = vm_ds_copy_to_array(&vm, stack, 256);
+
+  CHECK(count == 3);
+  CHECK(stack[0] == 10);  // Bottom
+  CHECK(stack[1] == 20);
+  CHECK(stack[2] == 30);  // TOP
+}
+
+TEST_CASE("vm_ds_copy_to_array - partial copy")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  vm_ds_push(&vm, 1);
+  vm_ds_push(&vm, 2);
+  vm_ds_push(&vm, 3);
+  vm_ds_push(&vm, 4);
+  vm_ds_push(&vm, 5);
+
+  v4_i32 stack[3];
+  int count = vm_ds_copy_to_array(&vm, stack, 3);
+
+  CHECK(count == 3);  // Only max_count elements copied
+  CHECK(stack[0] == 1);
+  CHECK(stack[1] == 2);
+  CHECK(stack[2] == 3);
+}
+
+TEST_CASE("vm_ds_copy_to_array - empty stack")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  v4_i32 stack[256];
+  int count = vm_ds_copy_to_array(&vm, stack, 256);
+
+  CHECK(count == 0);
+}
+
+TEST_CASE("vm_ds_copy_to_array - NULL handling")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  v4_i32 stack[256];
+
+  CHECK(vm_ds_copy_to_array(nullptr, stack, 256) == 0);
+  CHECK(vm_ds_copy_to_array(&vm, nullptr, 256) == 0);
+  CHECK(vm_ds_copy_to_array(&vm, stack, 0) == 0);
+  CHECK(vm_ds_copy_to_array(&vm, stack, -1) == 0);
+}
+
+TEST_CASE("vm_ds_copy_to_array - large stack")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  // Push 100 values
+  for (int i = 0; i < 100; i++)
+  {
+    vm_ds_push(&vm, i * 10);
+  }
+
+  v4_i32 stack[256];
+  int count = vm_ds_copy_to_array(&vm, stack, 256);
+
+  CHECK(count == 100);
+  CHECK(stack[0] == 0);     // First pushed
+  CHECK(stack[50] == 500);  // Middle
+  CHECK(stack[99] == 990);  // Last pushed (TOP)
+}

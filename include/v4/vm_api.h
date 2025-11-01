@@ -242,6 +242,30 @@ extern "C"
    */
   v4_i32 vm_ds_peek_public(struct Vm *vm, int index_from_top);
 
+  /**
+   * @brief Copy the entire data stack to an array.
+   *
+   * Copies stack contents from bottom to top into the output array.
+   * out_array[0] is the oldest value (stack bottom), out_array[depth-1] is TOS.
+   *
+   * @param vm         VM instance (must not be NULL).
+   * @param out_array  Output array (must not be NULL).
+   * @param max_count  Maximum number of elements to copy.
+   * @return Number of elements actually copied (0 to max_count).
+   *
+   * @note If stack depth exceeds max_count, only max_count elements are copied.
+   * @note Caller must allocate the output array.
+   *
+   * @example
+   * v4_i32 stack[256];
+   * int count = vm_ds_copy_to_array(vm, stack, 256);
+   * printf("Stack depth: %d\n", count);
+   * for (int i = 0; i < count; i++) {
+   *     printf("  [%d]: %d\n", i, stack[i]);
+   * }
+   */
+  int vm_ds_copy_to_array(struct Vm *vm, v4_i32 *out_array, int max_count);
+
   /* ------------------------------------------------------------------------- */
   /* Stack manipulation (for REPL and advanced use cases)                      */
   /* ------------------------------------------------------------------------- */
