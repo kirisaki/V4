@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-11-02
+
 ### Added
 - REPL/debugger support API: `vm_find_word()` for searching words by name
   - Case-sensitive linear search through word dictionary
@@ -23,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `vm_rs_copy_to_array()`: Bulk copy return stack to array
   - Same behavior as data stack APIs but for return stack
   - Enables debugger to inspect call frames and local variables
+
+### Changed
+- Binary size increase: +1KB (21KB → 22KB) for new REPL/debugger APIs
 
 ## [0.7.0] - 2025-11-01
 
@@ -210,7 +215,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - C and C++ public API
 - Comprehensive test suite with doctest
 
-[unreleased]: https://github.com/kirisaki/V4/compare/v0.4.1...HEAD
+[unreleased]: https://github.com/V4-project/V4/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/V4-project/V4/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/V4-project/V4/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/V4-project/V4/compare/v0.4.1...v0.6.0
 [0.4.1]: https://github.com/kirisaki/V4/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/kirisaki/V4/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/kirisaki/V4/compare/v0.2.1...v0.3.0
