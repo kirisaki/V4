@@ -177,3 +177,96 @@ TEST_CASE("vm_ds_copy_to_array - large stack")
   CHECK(stack[50] == 500);  // Middle
   CHECK(stack[99] == 990);  // Last pushed (TOP)
 }
+
+// ============================================================================
+// vm_rs_depth_public() tests
+// ============================================================================
+
+TEST_CASE("vm_rs_depth_public - basic")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  CHECK(vm_rs_depth_public(&vm) == 0);
+
+  // Push values onto return stack (internal operation simulation)
+  vm.RS[0] = 100;
+  vm.RS[1] = 200;
+  vm.rp = vm.RS + 2;
+
+  CHECK(vm_rs_depth_public(&vm) == 2);
+}
+
+TEST_CASE("vm_rs_depth_public - NULL handling")
+{
+  CHECK(vm_rs_depth_public(nullptr) == 0);
+}
+
+// ============================================================================
+// vm_rs_copy_to_array() tests
+// ============================================================================
+
+TEST_CASE("vm_rs_copy_to_array - basic copy")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  // Set up return stack values
+  vm.RS[0] = 100;
+  vm.RS[1] = 200;
+  vm.RS[2] = 300;
+  vm.rp = vm.RS + 3;
+
+  v4_i32 rs[256];
+  int count = vm_rs_copy_to_array(&vm, rs, 256);
+
+  CHECK(count == 3);
+  CHECK(rs[0] == 100);
+  CHECK(rs[1] == 200);
+  CHECK(rs[2] == 300);
+}
+
+TEST_CASE("vm_rs_copy_to_array - partial copy")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  // Set up 5 values on return stack
+  for (int i = 0; i < 5; i++)
+  {
+    vm.RS[i] = (i + 1) * 100;
+  }
+  vm.rp = vm.RS + 5;
+
+  v4_i32 rs[3];
+  int count = vm_rs_copy_to_array(&vm, rs, 3);
+
+  CHECK(count == 3);  // Only max_count elements copied
+  CHECK(rs[0] == 100);
+  CHECK(rs[1] == 200);
+  CHECK(rs[2] == 300);
+}
+
+TEST_CASE("vm_rs_copy_to_array - empty stack")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  v4_i32 rs[256];
+  int count = vm_rs_copy_to_array(&vm, rs, 256);
+
+  CHECK(count == 0);
+}
+
+TEST_CASE("vm_rs_copy_to_array - NULL handling")
+{
+  Vm vm{};
+  reset_vm(&vm);
+
+  v4_i32 rs[256];
+
+  CHECK(vm_rs_copy_to_array(nullptr, rs, 256) == 0);
+  CHECK(vm_rs_copy_to_array(&vm, nullptr, 256) == 0);
+  CHECK(vm_rs_copy_to_array(&vm, rs, 0) == 0);
+  CHECK(vm_rs_copy_to_array(&vm, rs, -1) == 0);
+}

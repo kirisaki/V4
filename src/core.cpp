@@ -1336,6 +1336,29 @@ extern "C" void vm_ds_clear(struct Vm* vm)
   vm->sp = vm->DS;
 }
 
+/* ==================== Return stack inspection API ======================== */
+
+extern "C" int vm_rs_depth_public(struct Vm* vm)
+{
+  if (!vm)
+    return 0;
+  return static_cast<int>(vm->rp - vm->RS);
+}
+
+extern "C" int vm_rs_copy_to_array(struct Vm* vm, v4_i32* out_array, int max_count)
+{
+  if (!vm || !out_array || max_count <= 0)
+    return 0;
+
+  int depth = static_cast<int>(vm->rp - vm->RS);
+  int copy_count = (depth < max_count) ? depth : max_count;
+
+  // Copy stack from bottom to top
+  std::memcpy(out_array, vm->RS, copy_count * sizeof(v4_i32));
+
+  return copy_count;
+}
+
 /* ==================== Stack snapshot API ================================= */
 
 extern "C" struct VmStackSnapshot* vm_ds_snapshot(struct Vm* vm)

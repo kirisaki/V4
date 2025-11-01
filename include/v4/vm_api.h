@@ -293,6 +293,37 @@ extern "C"
   void vm_ds_clear(struct Vm *vm);
 
   /* ------------------------------------------------------------------------- */
+  /* Return stack inspection (for debugging and REPL)                          */
+  /* ------------------------------------------------------------------------- */
+
+  /**
+   * @brief Get the current return stack depth.
+   * @param vm  VM instance (must not be NULL).
+   * @return Number of elements currently on the return stack.
+   *
+   * @example
+   * int rs_depth = vm_rs_depth_public(vm);
+   * printf("Return stack depth: %d\n", rs_depth);
+   */
+  int vm_rs_depth_public(struct Vm *vm);
+
+  /**
+   * @brief Copy the entire return stack to an array.
+   *
+   * Copies return stack contents from bottom to top into the output array.
+   * Same behavior as vm_ds_copy_to_array() but for the return stack.
+   *
+   * @param vm         VM instance (must not be NULL).
+   * @param out_array  Output array (must not be NULL).
+   * @param max_count  Maximum number of elements to copy.
+   * @return Number of elements actually copied (0 to max_count).
+   *
+   * @note Implementation mirrors vm_ds_copy_to_array() but uses vm->RS.
+   * @note Caller must allocate the output array.
+   */
+  int vm_rs_copy_to_array(struct Vm *vm, v4_i32 *out_array, int max_count);
+
+  /* ------------------------------------------------------------------------- */
   /* Stack snapshot (for preserving stack across VM resets)                    */
   /* ------------------------------------------------------------------------- */
 

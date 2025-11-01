@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Supports partial copy when max_count < stack depth
   - NULL-safe parameter validation
   - Enables efficient stack display and V4-link protocol stack transfers
+- REPL/debugger support API: Return stack inspection APIs
+  - `vm_rs_depth_public()`: Get return stack depth
+  - `vm_rs_copy_to_array()`: Bulk copy return stack to array
+  - Same behavior as data stack APIs but for return stack
+  - Enables debugger to inspect call frames and local variables
 
 ## [0.7.0] - 2025-11-01
 
