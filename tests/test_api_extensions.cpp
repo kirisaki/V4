@@ -30,6 +30,9 @@ TEST_CASE("vm_find_word - basic search")
   CHECK(vm_find_word(&vm, "SQUARE") == 0);
   CHECK(vm_find_word(&vm, "DOUBLE") == 1);
   CHECK(vm_find_word(&vm, "UNKNOWN") < 0);
+
+  // Cleanup
+  vm_reset_dictionary(&vm);
 }
 
 TEST_CASE("vm_find_word - NULL handling")
@@ -52,6 +55,9 @@ TEST_CASE("vm_find_word - case sensitive")
   CHECK(vm_find_word(&vm, "test") == 0);
   CHECK(vm_find_word(&vm, "TEST") < 0);  // Case sensitive
   CHECK(vm_find_word(&vm, "Test") < 0);
+
+  // Cleanup
+  vm_reset_dictionary(&vm);
 }
 
 TEST_CASE("vm_find_word - empty dictionary")
@@ -74,6 +80,9 @@ TEST_CASE("vm_find_word - anonymous words")
   // Anonymous words cannot be found by name
   CHECK(vm_find_word(&vm, "NAMED") == 1);
   CHECK(vm_find_word(&vm, "") < 0);
+
+  // Cleanup
+  vm_reset_dictionary(&vm);
 }
 
 TEST_CASE("vm_find_word - multiple words with similar names")
@@ -89,6 +98,9 @@ TEST_CASE("vm_find_word - multiple words with similar names")
   CHECK(vm_find_word(&vm, "ADD") == 0);
   CHECK(vm_find_word(&vm, "ADDR") == 1);
   CHECK(vm_find_word(&vm, "ADD1") == 2);
+
+  // Cleanup
+  vm_reset_dictionary(&vm);
 }
 
 // ============================================================================
