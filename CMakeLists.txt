@@ -62,7 +62,7 @@ endif()
 # Enable LTO if supported and requested
 if(V4_ENABLE_LTO)
   include(CheckIPOSupported)
-  check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output)
+  check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output LANGUAGES C CXX)
   if(ipo_supported)
     set_target_properties(v4vm PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
     message(STATUS "LTO enabled for v4vm")
@@ -80,6 +80,15 @@ if(V4_ENABLE_MOCK_HAL)
 
   target_include_directories(mock_hal PUBLIC ${PROJECT_SOURCE_DIR}/include
                                              ${PROJECT_SOURCE_DIR}/tests)
+
+  # Enable LTO for mock_hal if requested
+  if(V4_ENABLE_LTO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output LANGUAGES C CXX)
+    if(ipo_supported)
+      set_target_properties(mock_hal PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif()
+  endif()
 
   # Export mock_hal as an alias for easier linking
   add_library(V4::mock_hal ALIAS mock_hal)
