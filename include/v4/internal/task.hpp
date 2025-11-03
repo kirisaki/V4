@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "v4/task.h"  // For v4_task_state_t
 
 #ifdef __cplusplus
 extern "C"
@@ -19,17 +20,6 @@ extern "C"
    * @brief Message queue size
    */
 #define V4_MSG_QUEUE_SIZE 16
-
-  /**
-   * @brief Task state enumeration
-   */
-  typedef enum
-  {
-    V4_TASK_STATE_DEAD = 0,    /**< Unused or terminated */
-    V4_TASK_STATE_READY,       /**< Ready to run */
-    V4_TASK_STATE_RUNNING,     /**< Currently running */
-    V4_TASK_STATE_BLOCKED,     /**< Blocked (sleep/receive) */
-  } v4_task_state_t;
 
   /**
    * @brief Task Control Block (TCB)

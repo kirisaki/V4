@@ -18,7 +18,7 @@ option(V4_BUILD_TOOLS "Build command-line tools" ON)
 option(V4_ENABLE_MOCK_HAL "Build with mock HAL (required for tests)" ON)
 option(V4_USE_V4HAL "Use V4-hal C++17 CRTP implementation" OFF)
 option(V4_OPTIMIZE_SIZE "Optimize for size (-Os)" ON)
-option(V4_ENABLE_LTO "Enable Link Time Optimization (not compatible with sanitizers)" OFF)
+option(V4_ENABLE_LTO "Enable Link Time Optimization (not compatible with sanitizers)" ON)
 
 # V4-hal path configuration
 set(V4HAL_LOCAL_PATH
@@ -29,7 +29,14 @@ set(V4HAL_LOCAL_PATH
 # Core VM Library
 # ============================================================================
 
-set(V4VM_SOURCES src/core.cpp src/memory.cpp src/arena.cpp)
+set(V4VM_SOURCES
+    src/core.cpp
+    src/memory.cpp
+    src/arena.cpp
+    src/task.cpp
+    src/scheduler.cpp
+    src/message.cpp
+)
 
 add_library(v4vm STATIC ${V4VM_SOURCES})
 
@@ -53,10 +60,16 @@ else()
     v4vm
     PRIVATE -Wall # Enable all warnings
             -Wextra # Enable extra warnings
-            -fno-exceptions -fno-rtti)
+            -fno-exceptions
+            -fno-rtti
+            -ffunction-sections # Function sections for gc-sections
+            -fdata-sections # Data sections for gc-sections
+  )
   if(V4_OPTIMIZE_SIZE)
     target_compile_options(v4vm PRIVATE -Os)
   endif()
+  # Linker flags for size optimization
+  target_link_options(v4vm PRIVATE -Wl,--gc-sections)
 endif()
 
 # Enable LTO if supported and requested
@@ -76,7 +89,7 @@ endif()
 # ============================================================================
 
 if(V4_ENABLE_MOCK_HAL)
-  add_library(mock_hal STATIC tests/mock_hal.cpp)
+  add_library(mock_hal STATIC tests/mock_hal.cpp tests/mock_task_platform.cpp)
 
   target_include_directories(mock_hal PUBLIC ${PROJECT_SOURCE_DIR}/include
                                              ${PROJECT_SOURCE_DIR}/tests)
