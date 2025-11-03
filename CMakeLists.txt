@@ -178,6 +178,9 @@ if(V4_BUILD_TESTS)
     # API Extension Tests
     add_v4_test(test_api_extensions tests/test_api_extensions.cpp)
 
+    # Task System Tests
+    add_v4_test(test_task tests/test_task.cpp)
+
     # C API Tests
     add_executable(test_vm_c tests/test_vm_c.c)
     target_include_directories(test_vm_c PRIVATE ${PROJECT_SOURCE_DIR}/include)

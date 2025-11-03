@@ -57,3 +57,9 @@ extern "C" void mock_task_reset_tick(void)
   mock_tick_ms = 0;
   critical_nesting = 0;
 }
+
+// Test helper: get current tick
+extern "C" uint32_t mock_task_get_tick(void)
+{
+  return mock_tick_ms;
+}
