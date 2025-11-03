@@ -11,6 +11,7 @@
 #include "v4/internal/vm.h"
 #include "v4/opcodes.hpp"
 #include "v4/sys_ids.h"
+#include "v4/task.h"
 #include "v4/vm_api.h"
 
 /* ========================================================================= */
@@ -1186,6 +1187,152 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
 
       case v4::Op::RET:
         return V4_ERR(OK);
+
+      /* === Task Management (0x90-0x9A) === */
+      case v4::Op::TASK_SPAWN:
+      {
+        v4_i32 rs_size, ds_size, priority, word_idx;
+        v4_err err;
+
+        if ((err = ds_pop(vm, &rs_size)))
+          return err;
+        if ((err = ds_pop(vm, &ds_size)))
+          return err;
+        if ((err = ds_pop(vm, &priority)))
+          return err;
+        if ((err = ds_pop(vm, &word_idx)))
+          return err;
+
+        int task_id =
+            vm_task_spawn(vm, static_cast<uint16_t>(word_idx),
+                          static_cast<uint8_t>(priority), static_cast<uint16_t>(ds_size),
+                          static_cast<uint16_t>(rs_size));
+
+        if ((err = ds_push(vm, task_id)))
+          return err;
+        break;
+      }
+
+      case v4::Op::TASK_EXIT:
+      {
+        vm_task_exit(vm);
+        // Never returns - switches to another task
+        return V4_ERR(OK);
+      }
+
+      case v4::Op::TASK_SLEEP:
+      {
+        v4_i32 ms_delay;
+        v4_err err;
+
+        if ((err = ds_pop(vm, &ms_delay)))
+          return err;
+
+        vm_task_sleep(vm, static_cast<uint32_t>(ms_delay));
+        break;
+      }
+
+      case v4::Op::TASK_YIELD:
+      {
+        vm_task_yield(vm);
+        break;
+      }
+
+      case v4::Op::CRITICAL_ENTER:
+      {
+        vm_task_critical_enter(vm);
+        break;
+      }
+
+      case v4::Op::CRITICAL_EXIT:
+      {
+        vm_task_critical_exit(vm);
+        break;
+      }
+
+      case v4::Op::TASK_SEND:
+      {
+        v4_i32 data, msg_type, target_task;
+        v4_err err;
+
+        if ((err = ds_pop(vm, &data)))
+          return err;
+        if ((err = ds_pop(vm, &msg_type)))
+          return err;
+        if ((err = ds_pop(vm, &target_task)))
+          return err;
+
+        int result = vm_task_send(vm, static_cast<uint8_t>(target_task),
+                                  static_cast<uint8_t>(msg_type), data);
+
+        if ((err = ds_push(vm, result)))
+          return err;
+        break;
+      }
+
+      case v4::Op::TASK_RECEIVE:
+      {
+        v4_i32 msg_type;
+        int32_t data;
+        uint8_t src_task;
+        v4_err err;
+
+        if ((err = ds_pop(vm, &msg_type)))
+          return err;
+
+        int result = vm_task_receive(vm, static_cast<uint8_t>(msg_type), &data, &src_task);
+
+        if ((err = ds_push(vm, data)))
+          return err;
+        if ((err = ds_push(vm, src_task)))
+          return err;
+        if ((err = ds_push(vm, result)))
+          return err;
+        break;
+      }
+
+      case v4::Op::TASK_RECEIVE_BLOCKING:
+      {
+        v4_i32 timeout_ms, msg_type;
+        int32_t data;
+        uint8_t src_task;
+        v4_err err;
+
+        if ((err = ds_pop(vm, &timeout_ms)))
+          return err;
+        if ((err = ds_pop(vm, &msg_type)))
+          return err;
+
+        int result =
+            vm_task_receive_blocking(vm, static_cast<uint8_t>(msg_type), &data, &src_task,
+                                     static_cast<uint32_t>(timeout_ms));
+
+        if ((err = ds_push(vm, data)))
+          return err;
+        if ((err = ds_push(vm, src_task)))
+          return err;
+        if ((err = ds_push(vm, result)))
+          return err;
+        break;
+      }
+
+      case v4::Op::TASK_SELF:
+      {
+        v4_err err;
+        int task_id = vm_task_self(vm);
+        if ((err = ds_push(vm, task_id)))
+          return err;
+        break;
+      }
+
+      case v4::Op::TASK_COUNT:
+      {
+        v4_err err;
+        int count = vm->scheduler.task_count;
+        if ((err = ds_push(vm, count)))
+          return err;
+        break;
+      }
 
       default:
         return V4_ERR(UnknownOp);
