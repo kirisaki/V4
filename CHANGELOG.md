@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2025-11-03
+
+### Added
+- `vm_task_cleanup()`: New API to cleanup task system and free allocated task stacks
+  - Should be called before `vm_destroy()` to prevent memory leaks
+  - Frees all task stacks (ds_base, rs_base) allocated by `vm_task_spawn()`
+  - Resets scheduler and message queue state
+
+### Fixed
+- Memory leak in task system detected by AddressSanitizer
+  - Task stacks allocated by `vm_task_spawn()` were not being freed
+  - All test cases now properly call `vm_task_cleanup()` before `vm_destroy()`
+
 ## [0.9.0] - 2025-11-03
 
 ### Added
@@ -258,7 +271,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - C and C++ public API
 - Comprehensive test suite with doctest
 
-[unreleased]: https://github.com/V4-project/V4/compare/v0.8.0...HEAD
+[unreleased]: https://github.com/V4-project/V4/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/V4-project/V4/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/V4-project/V4/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/V4-project/V4/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/V4-project/V4/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/V4-project/V4/compare/v0.4.1...v0.6.0
