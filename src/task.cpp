@@ -37,6 +37,37 @@ extern "C" v4_err vm_task_init(Vm *vm, uint32_t time_slice_ms)
   return V4_ERR(OK);
 }
 
+extern "C" v4_err vm_task_cleanup(Vm *vm)
+{
+  if (!vm)
+    return V4_ERR(InvalidArg);
+
+  // Free all task stacks
+  for (int i = 0; i < V4_MAX_TASKS; i++)
+  {
+    v4_task_t *task = &vm->scheduler.tasks[i];
+    if (task->ds_base)
+    {
+      free(task->ds_base);
+      task->ds_base = nullptr;
+    }
+    if (task->rs_base)
+    {
+      free(task->rs_base);
+      task->rs_base = nullptr;
+    }
+    task->state = V4_TASK_STATE_DEAD;
+  }
+
+  // Reset scheduler
+  vm->scheduler.task_count = 0;
+
+  // Reset message queue
+  memset(&vm->msg_queue, 0, sizeof(v4_msg_queue_t));
+
+  return V4_ERR(OK);
+}
+
 extern "C" int vm_task_spawn(Vm *vm, uint16_t word_idx, uint8_t priority,
                              uint16_t ds_size, uint16_t rs_size)
 {

@@ -40,6 +40,7 @@ TEST_CASE("Task system initialization")
   // Verify message queue is empty
   CHECK(vm->msg_queue.count == 0);
 
+  vm_task_cleanup(vm);
   vm_destroy(vm);
 }
 
@@ -109,6 +110,7 @@ TEST_CASE("Task spawn and exit")
     CHECK(task_id == -3);  // Invalid word_idx
   }
 
+  vm_task_cleanup(vm);
   vm_destroy(vm);
 }
 
@@ -134,6 +136,7 @@ TEST_CASE("Task self and count")
   // Task count should be 2
   CHECK(vm->scheduler.task_count == 2);
 
+  vm_task_cleanup(vm);
   vm_destroy(vm);
 }
 
@@ -221,6 +224,7 @@ TEST_CASE("Message passing")
     CHECK(err == -1);  // Queue full
   }
 
+  vm_task_cleanup(vm);
   vm_destroy(vm);
 }
 
@@ -278,6 +282,7 @@ TEST_CASE("Task sleep")
   }
 
   mock_task_reset_tick();
+  vm_task_cleanup(vm);
   vm_destroy(vm);
 }
 
@@ -324,6 +329,7 @@ TEST_CASE("Critical section")
     CHECK(vm->scheduler.critical_nesting == 0);
   }
 
+  vm_task_cleanup(vm);
   vm_destroy(vm);
 }
 
@@ -424,5 +430,6 @@ TEST_CASE("Task opcodes")
     CHECK(vm->msg_queue.count == 1);
   }
 
+  vm_task_cleanup(vm);
   vm_destroy(vm);
 }

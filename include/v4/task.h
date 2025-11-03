@@ -36,6 +36,18 @@ extern "C"
   v4_err vm_task_init(struct Vm *vm, uint32_t time_slice_ms);
 
   /**
+   * @brief Cleanup task system
+   *
+   * Cleans up the task system in the VM instance.
+   * Frees all task stacks and resets the scheduler.
+   * Should be called before vm_destroy().
+   *
+   * @param vm VM instance
+   * @return 0 on success, negative on error
+   */
+  v4_err vm_task_cleanup(struct Vm *vm);
+
+  /**
    * @brief Spawn a new task
    *
    * Creates a new task that executes the specified word.
