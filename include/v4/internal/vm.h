@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "v4/vm_api.h"
+#include "v4/internal/task.hpp"
 
 #ifdef __cplusplus
 extern "C"
@@ -58,6 +59,10 @@ extern "C"
 
     /* Reserved for future JIT / IC linkage */
     const VmConfig *boot_cfg_snapshot;
+
+    /* Task system (always enabled) */
+    v4_scheduler_t scheduler; /**< Task scheduler */
+    v4_msg_queue_t msg_queue; /**< Message queue */
   } Vm;
 
   /* Internal-only helper to execute raw bytecode for early bring-up/tests. */

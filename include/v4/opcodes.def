@@ -74,4 +74,16 @@ OP(LINC     , 0x80, IMM8)    // local[n]++
 OP(LDEC     , 0x81, IMM8)    // local[n]--
 // === Reserved / future ===
 OP(SYSX     , 0x8F, IMM8)    // hostcall extension
+// === Task management (0x90-0x9F) ===
+OP(TASK_SPAWN           , 0x90, NO_IMM)  // ( word_idx priority ds_size rs_size -- task_id )
+OP(TASK_EXIT            , 0x91, NO_IMM)  // ( -- ) [does not return]
+OP(TASK_SLEEP           , 0x92, NO_IMM)  // ( ms_delay -- )
+OP(TASK_YIELD           , 0x93, NO_IMM)  // ( -- )
+OP(CRITICAL_ENTER       , 0x94, NO_IMM)  // ( -- )
+OP(CRITICAL_EXIT        , 0x95, NO_IMM)  // ( -- )
+OP(TASK_SEND            , 0x96, NO_IMM)  // ( target_task msg_type data -- err )
+OP(TASK_RECEIVE         , 0x97, NO_IMM)  // ( msg_type -- data src_task flag )
+OP(TASK_RECEIVE_BLOCKING, 0x98, NO_IMM)  // ( msg_type timeout_ms -- data src_task flag )
+OP(TASK_SELF            , 0x99, NO_IMM)  // ( -- task_id )
+OP(TASK_COUNT           , 0x9A, NO_IMM)  // ( -- count )
 // 0xC0–0xDF: reserved for f32/i64 type prefixes
