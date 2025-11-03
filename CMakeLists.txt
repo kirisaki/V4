@@ -18,7 +18,8 @@ option(V4_BUILD_TOOLS "Build command-line tools" ON)
 option(V4_ENABLE_MOCK_HAL "Build with mock HAL (required for tests)" ON)
 option(V4_USE_V4HAL "Use V4-hal C++17 CRTP implementation" OFF)
 option(V4_OPTIMIZE_SIZE "Optimize for size (-Os)" ON)
-option(V4_ENABLE_LTO "Enable Link Time Optimization (not compatible with sanitizers)" ON)
+option(V4_ENABLE_LTO
+       "Enable Link Time Optimization (incompatible with sanitizers - disable for ASan/TSan)" ON)
 
 # V4-hal path configuration
 set(V4HAL_LOCAL_PATH

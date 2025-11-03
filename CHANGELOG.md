@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - LTO (Link Time Optimization) now enabled by default (`V4_ENABLE_LTO=ON`)
+  - Note: Incompatible with sanitizers (ASan/TSan) - disable LTO when using sanitizers
 - Enhanced size optimization with function/data section splitting (`-ffunction-sections`, `-fdata-sections`)
 - Linker garbage collection enabled (`-Wl,--gc-sections`)
 - Binary size increase: +28KB for task system (14KB → 42KB static library)

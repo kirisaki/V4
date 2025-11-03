@@ -69,6 +69,7 @@ jobs:
         cmake -B build \
           -DCMAKE_BUILD_TYPE=Debug \
           -DV4_BUILD_TESTS=ON \
+          -DV4_ENABLE_LTO=OFF \
           -DCMAKE_CXX_FLAGS="-fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer -g"
           
     - name: Build
