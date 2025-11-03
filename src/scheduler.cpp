@@ -1,8 +1,10 @@
 #include "v4/internal/scheduler.hpp"
+
+#include <cstring>
+
 #include "v4/errors.hpp"
 #include "v4/internal/vm.h"
 #include "v4/task_platform.h"
-#include <cstring>
 
 /* ========================================================================= */
 /* Scheduler Core Implementation                                             */
@@ -134,8 +136,7 @@ extern "C" v4_err vm_schedule(Vm *vm)
   uint8_t next_task_id = v4_task_select_next(vm);
 
   // No switch needed
-  if (next_task_id == sched->current_task &&
-      current->state != V4_TASK_STATE_DEAD &&
+  if (next_task_id == sched->current_task && current->state != V4_TASK_STATE_DEAD &&
       current->state != V4_TASK_STATE_BLOCKED)
   {
     current->state = V4_TASK_STATE_RUNNING;

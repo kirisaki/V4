@@ -51,8 +51,8 @@ extern "C"
    *         -2: Out of memory
    *         -3: Invalid word_idx
    */
-  int vm_task_spawn(struct Vm *vm, uint16_t word_idx, uint8_t priority,
-                    uint16_t ds_size, uint16_t rs_size);
+  int vm_task_spawn(struct Vm *vm, uint16_t word_idx, uint8_t priority, uint16_t ds_size,
+                    uint16_t rs_size);
 
   /**
    * @brief Exit current task
@@ -128,8 +128,8 @@ extern "C"
    * @param[out] priority Priority (can be NULL)
    * @return 0 on success, negative on error
    */
-  v4_err vm_task_get_info(struct Vm *vm, uint8_t task_id,
-                          v4_task_state_t *state, uint8_t *priority);
+  v4_err vm_task_get_info(struct Vm *vm, uint8_t task_id, v4_task_state_t *state,
+                          uint8_t *priority);
 
   /* ========================================================================= */
   /* Message Passing API                                                      */
@@ -149,8 +149,7 @@ extern "C"
    *         -1: Queue full
    *         -2: Invalid target_task
    */
-  v4_err vm_task_send(struct Vm *vm, uint8_t target_task, uint8_t msg_type,
-                      int32_t data);
+  v4_err vm_task_send(struct Vm *vm, uint8_t target_task, uint8_t msg_type, int32_t data);
 
   /**
    * @brief Receive inter-task message (non-blocking)
@@ -164,8 +163,7 @@ extern "C"
    * @param[out] src_task Source task ID storage (can be NULL)
    * @return 1 if message received, 0 if no message, negative on error
    */
-  int vm_task_receive(struct Vm *vm, uint8_t msg_type, int32_t *data,
-                      uint8_t *src_task);
+  int vm_task_receive(struct Vm *vm, uint8_t msg_type, int32_t *data, uint8_t *src_task);
 
   /**
    * @brief Receive inter-task message (blocking)
@@ -181,7 +179,7 @@ extern "C"
    * @return 1 if received, 0 if timeout, negative on error
    */
   int vm_task_receive_blocking(struct Vm *vm, uint8_t msg_type, int32_t *data,
-                                uint8_t *src_task, uint32_t timeout_ms);
+                               uint8_t *src_task, uint32_t timeout_ms);
 
 #ifdef __cplusplus
 } /* extern "C" */

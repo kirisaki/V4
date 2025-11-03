@@ -1,17 +1,18 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest.h"
+#include <cstring>
 
+#include "doctest.h"
 #include "v4/internal/scheduler.hpp"
 #include "v4/internal/vm.h"
 #include "v4/task.h"
 #include "v4/vm_api.h"
-#include <cstring>
 
 // Mock platform helpers
-extern "C" {
-void mock_task_advance_tick(uint32_t ms);
-void mock_task_reset_tick(void);
-uint32_t mock_task_get_tick(void);
+extern "C"
+{
+  void mock_task_advance_tick(uint32_t ms);
+  void mock_task_reset_tick(void);
+  uint32_t mock_task_get_tick(void);
 }
 
 TEST_CASE("Task system initialization")
@@ -401,11 +402,11 @@ TEST_CASE("Task opcodes")
   {
     // Stack order for TASK_SEND: ( target_task msg_type data -- err )
     const uint8_t code[] = {
-        0x73,                    // LIT0 (target_task=0)
-        0x76, 0x42,              // LIT_U8 0x42 (msg_type)
+        0x73,                          // LIT0 (target_task=0)
+        0x76, 0x42,                    // LIT_U8 0x42 (msg_type)
         0x00, 0x39, 0x30, 0x00, 0x00,  // LIT 12345 (data) - little-endian
-        0x96,                    // TASK_SEND
-        0x51                     // RET
+        0x96,                          // TASK_SEND
+        0x51                           // RET
     };
 
     int word_idx = vm_register_word(vm, "SEND_MSG", code, sizeof(code));

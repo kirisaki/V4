@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(
   V4VM
-  VERSION 0.8.0
+  VERSION 0.9.0
   LANGUAGES C CXX)
 
 # ============================================================================
@@ -29,14 +29,8 @@ set(V4HAL_LOCAL_PATH
 # Core VM Library
 # ============================================================================
 
-set(V4VM_SOURCES
-    src/core.cpp
-    src/memory.cpp
-    src/arena.cpp
-    src/task.cpp
-    src/scheduler.cpp
-    src/message.cpp
-)
+set(V4VM_SOURCES src/core.cpp src/memory.cpp src/arena.cpp src/task.cpp src/scheduler.cpp
+                 src/message.cpp)
 
 add_library(v4vm STATIC ${V4VM_SOURCES})
 
@@ -75,7 +69,10 @@ endif()
 # Enable LTO if supported and requested
 if(V4_ENABLE_LTO)
   include(CheckIPOSupported)
-  check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output LANGUAGES C CXX)
+  check_ipo_supported(
+    RESULT ipo_supported
+    OUTPUT ipo_output
+    LANGUAGES C CXX)
   if(ipo_supported)
     set_target_properties(v4vm PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
     message(STATUS "LTO enabled for v4vm")
@@ -97,7 +94,10 @@ if(V4_ENABLE_MOCK_HAL)
   # Enable LTO for mock_hal if requested
   if(V4_ENABLE_LTO)
     include(CheckIPOSupported)
-    check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output LANGUAGES C CXX)
+    check_ipo_supported(
+      RESULT ipo_supported
+      OUTPUT ipo_output
+      LANGUAGES C CXX)
     if(ipo_supported)
       set_target_properties(mock_hal PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()

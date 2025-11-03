@@ -1,6 +1,7 @@
-#include "v4/task_platform.h"
-#include "v4/internal/vm.h"
 #include <cstdint>
+
+#include "v4/internal/vm.h"
+#include "v4/task_platform.h"
 
 /* ========================================================================= */
 /* Mock Platform Implementation (for testing)                                */

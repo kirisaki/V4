@@ -1203,10 +1203,9 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         if ((err = ds_pop(vm, &word_idx)))
           return err;
 
-        int task_id =
-            vm_task_spawn(vm, static_cast<uint16_t>(word_idx),
-                          static_cast<uint8_t>(priority), static_cast<uint16_t>(ds_size),
-                          static_cast<uint16_t>(rs_size));
+        int task_id = vm_task_spawn(
+            vm, static_cast<uint16_t>(word_idx), static_cast<uint8_t>(priority),
+            static_cast<uint16_t>(ds_size), static_cast<uint16_t>(rs_size));
 
         if ((err = ds_push(vm, task_id)))
           return err;
@@ -1280,7 +1279,8 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         if ((err = ds_pop(vm, &msg_type)))
           return err;
 
-        int result = vm_task_receive(vm, static_cast<uint8_t>(msg_type), &data, &src_task);
+        int result =
+            vm_task_receive(vm, static_cast<uint8_t>(msg_type), &data, &src_task);
 
         if ((err = ds_push(vm, data)))
           return err;

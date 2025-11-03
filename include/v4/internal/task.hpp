@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+
 #include "v4/task.h"  // For v4_task_state_t
 
 #ifdef __cplusplus
@@ -30,26 +31,26 @@ extern "C"
   typedef struct
   {
     /* === Execution Context (16 bytes) === */
-    uint16_t word_idx;  /**< Word index to execute */
-    uint16_t pc;        /**< Program counter (bytecode offset) */
+    uint16_t word_idx; /**< Word index to execute */
+    uint16_t pc;       /**< Program counter (bytecode offset) */
 
-    int32_t *ds_base;  /**< Data stack base address */
-    int32_t *rs_base;  /**< Return stack base address */
-    uint8_t ds_depth;  /**< Data stack depth */
-    uint8_t rs_depth;  /**< Return stack depth */
+    int32_t *ds_base; /**< Data stack base address */
+    int32_t *rs_base; /**< Return stack base address */
+    uint8_t ds_depth; /**< Data stack depth */
+    uint8_t rs_depth; /**< Return stack depth */
 
     /* === Task State (8 bytes) === */
-    uint8_t state;                /**< v4_task_state_t */
-    uint8_t priority;             /**< Priority (0=lowest, 255=highest) */
-    uint32_t sleep_until_tick;    /**< Sleep end time (tick) */
+    uint8_t state;             /**< v4_task_state_t */
+    uint8_t priority;          /**< Priority (0=lowest, 255=highest) */
+    uint32_t sleep_until_tick; /**< Sleep end time (tick) */
 
     /* === Stack Size Configuration (4 bytes) === */
-    uint8_t ds_size;  /**< DS size (number of elements) */
-    uint8_t rs_size;  /**< RS size (number of elements) */
+    uint8_t ds_size; /**< DS size (number of elements) */
+    uint8_t rs_size; /**< RS size (number of elements) */
 
     /* === Statistics & Debug (4 bytes) === */
-    uint16_t exec_count;  /**< Execution count (for debugging) */
-    uint8_t reserved[2];  /**< Reserved for future use */
+    uint16_t exec_count; /**< Execution count (for debugging) */
+    uint8_t reserved[2]; /**< Reserved for future use */
   } v4_task_t;
 
   /**
@@ -59,7 +60,7 @@ extern "C"
    */
   typedef struct
   {
-    v4_task_t tasks[V4_MAX_TASKS];  /**< Task table (256 bytes) */
+    v4_task_t tasks[V4_MAX_TASKS]; /**< Task table (256 bytes) */
 
     uint8_t current_task;   /**< Currently running task ID */
     uint8_t task_count;     /**< Number of active tasks */
@@ -80,11 +81,11 @@ extern "C"
    */
   typedef struct
   {
-    uint8_t src_task;  /**< Source task ID */
-    uint8_t dst_task;  /**< Destination task ID (0xFF=broadcast) */
-    uint8_t msg_type;  /**< Message type (user-defined) */
-    uint8_t flags;     /**< Flags (reserved) */
-    int32_t data;      /**< Data payload (32bit) */
+    uint8_t src_task; /**< Source task ID */
+    uint8_t dst_task; /**< Destination task ID (0xFF=broadcast) */
+    uint8_t msg_type; /**< Message type (user-defined) */
+    uint8_t flags;    /**< Flags (reserved) */
+    int32_t data;     /**< Data payload (32bit) */
   } v4_message_t;
 
   /**
@@ -93,10 +94,10 @@ extern "C"
   typedef struct
   {
     v4_message_t queue[V4_MSG_QUEUE_SIZE]; /**< Ring buffer (128 bytes) */
-    uint8_t read_idx;                       /**< Read index */
-    uint8_t write_idx;                      /**< Write index */
-    uint8_t count;                          /**< Message count */
-    uint8_t reserved;                       /**< Alignment */
+    uint8_t read_idx;                      /**< Read index */
+    uint8_t write_idx;                     /**< Write index */
+    uint8_t count;                         /**< Message count */
+    uint8_t reserved;                      /**< Alignment */
   } v4_msg_queue_t;
 
 #ifdef __cplusplus

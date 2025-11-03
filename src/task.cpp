@@ -1,10 +1,12 @@
 #include "v4/task.h"
+
+#include <cstdlib>
+#include <cstring>
+
 #include "v4/errors.hpp"
 #include "v4/internal/scheduler.hpp"
 #include "v4/internal/vm.h"
 #include "v4/task_platform.h"
-#include <cstring>
-#include <cstdlib>
 
 /* ========================================================================= */
 /* Task Management Implementation                                            */
@@ -196,8 +198,8 @@ extern "C" int vm_task_self(Vm *vm)
   return vm->scheduler.current_task;
 }
 
-extern "C" v4_err vm_task_get_info(Vm *vm, uint8_t task_id,
-                                   v4_task_state_t *state, uint8_t *priority)
+extern "C" v4_err vm_task_get_info(Vm *vm, uint8_t task_id, v4_task_state_t *state,
+                                   uint8_t *priority)
 {
   if (!vm || task_id >= V4_MAX_TASKS)
     return V4_ERR(InvalidArg);

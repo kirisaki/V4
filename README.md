@@ -5,6 +5,11 @@ A lightweight Forth-compatible bytecode VM written in C++17.
 ## Features
 
 - Stack-based architecture with 32-bit cells
+- **Preemptive multitasking system** (v0.9.0+)
+  - Priority-based scheduler with up to 8 concurrent tasks
+  - Inter-task message passing with 16-message queue
+  - Task sleep, yield, and critical sections
+  - Platform-abstracted timer interrupts
 - Memory-mapped I/O support
 - Little-endian byte ordering
 - No exceptions, no RTTI
@@ -31,6 +36,42 @@ This provides:
 - Platform support: POSIX, ESP32, CH32V203
 - Minimal runtime footprint (~5.7KB for GPIO+Timer)
 - Backward compatible with existing `v4_hal_*` API
+
+## Task System
+
+V4 includes a preemptive multitasking system designed for embedded microcontrollers:
+
+### Memory Footprint
+- Task scheduler: ~400 bytes
+- Per-task overhead: 32 bytes + stack allocation
+- Total VM with tasks: ~42KB (Release build with LTO)
+
+### API Example
+```c
+#include "v4/task.h"
+
+// Initialize task system (10ms time slice)
+vm_task_init(vm, 10);
+
+// Spawn a task
+int task_id = vm_task_spawn(vm, word_idx, priority, ds_size, rs_size);
+
+// Task control
+vm_task_sleep(vm, 100);  // Sleep 100ms
+vm_task_yield(vm);       // Yield to other tasks
+
+// Inter-task messaging
+vm_task_send(vm, target_task, msg_type, data);
+vm_task_receive(vm, msg_type, &data, &src_task);
+```
+
+### VM Opcodes (0x90-0x9A)
+- `TASK_SPAWN`, `TASK_EXIT`, `TASK_SLEEP`, `TASK_YIELD`
+- `CRITICAL_ENTER`, `CRITICAL_EXIT`
+- `TASK_SEND`, `TASK_RECEIVE`, `TASK_RECEIVE_BLOCKING`
+- `TASK_SELF`, `TASK_COUNT`
+
+See [v4/task.h](include/v4/task.h) for full API documentation.
 
 ## Testing
 

@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2025-11-03
+
+### Added
+- **Preemptive multitasking system** for embedded microcontrollers
+  - Priority-based scheduler supporting up to 8 concurrent tasks
+  - Task management API: `vm_task_init()`, `vm_task_spawn()`, `vm_task_exit()`
+  - Task control: `vm_task_sleep()`, `vm_task_yield()`, `vm_task_critical_enter/exit()`
+  - Inter-task messaging with 16-message ring buffer queue
+    - `vm_task_send()`: Non-blocking message send
+    - `vm_task_receive()`: Non-blocking receive with type filtering
+    - `vm_task_receive_blocking()`: Blocking receive with timeout
+  - Task information API: `vm_task_self()`, `vm_task_get_info()`
+  - Platform abstraction layer for timer interrupts
+    - `v4_task_platform.h`: Interface for platform-specific timer setup
+    - Mock platform implementation for testing
+  - 11 new VM opcodes (0x90-0x9A):
+    - `TASK_SPAWN`, `TASK_EXIT`, `TASK_SLEEP`, `TASK_YIELD`
+    - `CRITICAL_ENTER`, `CRITICAL_EXIT`
+    - `TASK_SEND`, `TASK_RECEIVE`, `TASK_RECEIVE_BLOCKING`
+    - `TASK_SELF`, `TASK_COUNT`
+  - Comprehensive test suite with 119 assertions covering:
+    - Task initialization and lifecycle
+    - Message passing and queue limits
+    - Sleep/wake functionality
+    - Critical sections and nesting
+    - Opcode integration
+
+### Changed
+- LTO (Link Time Optimization) now enabled by default (`V4_ENABLE_LTO=ON`)
+- Enhanced size optimization with function/data section splitting (`-ffunction-sections`, `-fdata-sections`)
+- Linker garbage collection enabled (`-Wl,--gc-sections`)
+- Binary size increase: +28KB for task system (14KB → 42KB static library)
+  - Task scheduler: ~400 bytes
+  - Per-task overhead: 32 bytes (TCB) + independent stacks
+  - Message queue: 132 bytes (16 × 8-byte messages)
+  - Unused features removed via LTO in final applications
+
+### Performance
+- Context switch overhead: <100μs
+- Message passing: <50μs
+- Default time slice: 10ms (configurable)
+
 ## [0.8.0] - 2025-11-02
 
 ### Added

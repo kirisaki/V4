@@ -1,6 +1,6 @@
-#include "v4/task.h"
 #include "v4/errors.hpp"
 #include "v4/internal/vm.h"
+#include "v4/task.h"
 #include "v4/task_platform.h"
 
 /* ========================================================================= */
@@ -38,8 +38,7 @@ extern "C" v4_err vm_task_send(Vm *vm, uint8_t target_task, uint8_t msg_type,
   return V4_ERR(OK);
 }
 
-extern "C" int vm_task_receive(Vm *vm, uint8_t msg_type, int32_t *data,
-                               uint8_t *src_task)
+extern "C" int vm_task_receive(Vm *vm, uint8_t msg_type, int32_t *data, uint8_t *src_task)
 {
   if (!vm)
     return -1;
