@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2025-11-04
+
+### Fixed
+- Incorrect error code name in FreeRTOS backend
+  - Changed `V4_ERR(OutOfMemory)` to `V4_ERR(NoMemory)` in `task_backend_freertos.cpp`
+  - This error prevented compilation of the FreeRTOS backend
+
 ## [0.11.0] - 2025-11-04
 
 ### Added
