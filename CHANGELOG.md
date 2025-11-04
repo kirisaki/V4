@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-01-05
+
 ### Added
 - **VM panic handler system** for debugging and diagnostics
   - `vm_panic()` API to collect and display error information
@@ -25,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Multiple stack items
     - Stack overflow detection
     - Stack underflow detection
+
+### Changed
+- Library size increase: ~2KB for panic handler implementation (182KB stripped with LTO)
+  - Minimal impact in final applications due to LTO optimization
+  - Unused panic output code eliminated at link time
 
 ## [0.11.1] - 2025-11-04
 
@@ -328,7 +335,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - C and C++ public API
 - Comprehensive test suite with doctest
 
-[unreleased]: https://github.com/V4-project/V4-engine/compare/v0.9.1...HEAD
+[unreleased]: https://github.com/V4-project/V4-engine/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/V4-project/V4-engine/compare/v0.11.1...v0.12.0
+[0.11.1]: https://github.com/V4-project/V4-engine/compare/v0.11.0...v0.11.1
 [0.9.1]: https://github.com/V4-project/V4-engine/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/V4-project/V4-engine/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/V4-project/V4-engine/compare/v0.7.0...v0.8.0
