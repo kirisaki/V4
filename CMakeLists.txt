@@ -23,6 +23,12 @@ option(
   "Enable Link Time Optimization (incompatible with sanitizers - disable for ASan/TSan)"
   ON)
 
+# Task backend selection
+set(V4_TASK_BACKEND
+    "CUSTOM"
+    CACHE STRING "Task backend implementation (CUSTOM|FREERTOS)")
+set_property(CACHE V4_TASK_BACKEND PROPERTY STRINGS "CUSTOM" "FREERTOS")
+
 # V4-hal path configuration
 set(V4HAL_LOCAL_PATH
     "${CMAKE_CURRENT_SOURCE_DIR}/../V4-hal"
@@ -32,8 +38,24 @@ set(V4HAL_LOCAL_PATH
 # Core VM Library
 # ============================================================================
 
-set(V4ENGINE_SOURCES src/core.cpp src/memory.cpp src/arena.cpp src/task.cpp
-                     src/scheduler.cpp src/message.cpp)
+set(V4ENGINE_SOURCES
+    src/core.cpp
+    src/memory.cpp
+    src/arena.cpp
+    src/task.cpp
+    src/scheduler.cpp
+    src/message.cpp)
+
+# Add task backend implementation based on selection
+if(V4_TASK_BACKEND STREQUAL "CUSTOM")
+  list(APPEND V4ENGINE_SOURCES src/task_backend_custom.cpp)
+  message(STATUS "Using CUSTOM task backend")
+elseif(V4_TASK_BACKEND STREQUAL "FREERTOS")
+  list(APPEND V4ENGINE_SOURCES src/task_backend_freertos.cpp)
+  message(STATUS "Using FreeRTOS task backend")
+else()
+  message(FATAL_ERROR "Invalid V4_TASK_BACKEND: ${V4_TASK_BACKEND}. Must be CUSTOM or FREERTOS")
+endif()
 
 add_library(v4engine STATIC ${V4ENGINE_SOURCES})
 
@@ -222,6 +244,7 @@ message(STATUS "V4 Engine Configuration Summary:")
 message(STATUS "  Version:              ${PROJECT_VERSION}")
 message(STATUS "  Build type:           ${CMAKE_BUILD_TYPE}")
 message(STATUS "  C++ standard:         ${CMAKE_CXX_STANDARD}")
+message(STATUS "  Task backend:         ${V4_TASK_BACKEND}")
 message(STATUS "  Build tests:          ${V4_BUILD_TESTS}")
 message(STATUS "  Build tools:          ${V4_BUILD_TOOLS}")
 message(STATUS "  Enable mock HAL:      ${V4_ENABLE_MOCK_HAL}")
