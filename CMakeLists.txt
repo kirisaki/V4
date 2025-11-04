@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(
   V4Engine
-  VERSION 0.11.1
+  VERSION 0.11.2
   LANGUAGES C CXX)
 
 # ============================================================================
