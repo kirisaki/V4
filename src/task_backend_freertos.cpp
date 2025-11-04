@@ -57,7 +57,7 @@ extern "C" v4_err v4_backend_task_init(Vm *vm, uint32_t time_slice_ms)
   // Create message queue (16 messages, each holding v4_message_t)
   msg_queue = xQueueCreate(V4_MSG_QUEUE_SIZE, sizeof(v4_message_t));
   if (msg_queue == NULL)
-    return V4_ERR(OutOfMemory);
+    return V4_ERR(NoMemory);
 
   return V4_ERR(OK);
 }
