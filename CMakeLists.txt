@@ -34,6 +34,11 @@ set(V4HAL_LOCAL_PATH
     "${CMAKE_CURRENT_SOURCE_DIR}/../V4-hal"
     CACHE PATH "Path to local V4-hal source")
 
+# FreeRTOS path configuration (only needed when V4_TASK_BACKEND=FREERTOS)
+set(FREERTOS_PATH
+    ""
+    CACHE PATH "Path to FreeRTOS source directory")
+
 # ============================================================================
 # Core VM Library
 # ============================================================================
@@ -48,6 +53,17 @@ if(V4_TASK_BACKEND STREQUAL "CUSTOM")
 elseif(V4_TASK_BACKEND STREQUAL "FREERTOS")
   list(APPEND V4ENGINE_SOURCES src/task_backend_freertos.cpp)
   message(STATUS "Using FreeRTOS task backend")
+
+  # FreeRTOS integration (only needed for standalone FreeRTOS, not ESP-IDF)
+  if(FREERTOS_PATH AND EXISTS "${FREERTOS_PATH}")
+    message(STATUS "Using FreeRTOS from: ${FREERTOS_PATH}")
+    # Add FreeRTOS include paths if building outside ESP-IDF
+    target_include_directories(
+      v4engine PRIVATE "${FREERTOS_PATH}/include"
+                       "${FREERTOS_PATH}/portable/${FREERTOS_PORT}")
+  else()
+    message(STATUS "FreeRTOS provided by platform (e.g., ESP-IDF)")
+  endif()
 else()
   message(
     FATAL_ERROR "Invalid V4_TASK_BACKEND: ${V4_TASK_BACKEND}. Must be CUSTOM or FREERTOS")

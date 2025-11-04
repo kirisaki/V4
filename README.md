@@ -39,7 +39,30 @@ This provides:
 
 ## Task System
 
-V4 includes a preemptive multitasking system designed for embedded microcontrollers:
+V4 includes a preemptive multitasking system with **pluggable task backends**:
+
+### Task Backends
+
+**Custom Backend** (default):
+- V4's own priority-based + round-robin scheduler
+- Suitable for bare-metal and testing
+- Minimal dependencies
+
+**FreeRTOS Backend**:
+- Native FreeRTOS task integration
+- For ESP32, ESP-IDF, and other FreeRTOS platforms
+- Full FreeRTOS scheduler features
+
+Configure backend via CMake:
+```bash
+# Custom backend (default)
+cmake -B build -DV4_TASK_BACKEND=CUSTOM
+
+# FreeRTOS backend
+cmake -B build -DV4_TASK_BACKEND=FREERTOS -DFREERTOS_PATH=/path/to/freertos
+```
+
+For ESP-IDF, FreeRTOS is provided automatically (no `FREERTOS_PATH` needed).
 
 ### Memory Footprint
 - Task scheduler: ~400 bytes
