@@ -218,6 +218,9 @@ if(V4_BUILD_TESTS)
     # Task System Tests
     add_v4_test(test_task tests/test_task.cpp)
 
+    # Panic Handler Tests
+    add_v4_test(test_panic tests/test_panic.cpp)
+
     # C API Tests
     add_executable(test_vm_c tests/test_vm_c.c)
     target_include_directories(test_vm_c PRIVATE ${PROJECT_SOURCE_DIR}/include)
