@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-11-04
+
+### Added
+- **Pluggable task backend system** for flexible scheduler integration
+  - Backend abstraction layer (`v4/internal/task_backend.h`)
+  - Custom backend: V4's own priority + round-robin scheduler (default)
+  - FreeRTOS backend: Native FreeRTOS task integration for RTOS platforms
+  - CMake option `V4_TASK_BACKEND={CUSTOM|FREERTOS}` for compile-time selection
+  - ESP-IDF support with automatic FreeRTOS detection (`ESP_PLATFORM` macro)
+  - Priority mapping: V4 (0-255) → FreeRTOS (0-configMAX_PRIORITIES)
+- Documentation for task backend architecture in README
+
+### Changed
+- Task and message implementation refactored as thin wrappers
+  - `task.cpp` and `message.cpp` now delegate to backend implementations
+  - Original scheduler logic moved to `task_backend_custom.cpp`
+
+## [0.10.1] - 2025-11-04
+
+### Changed
+- Repository renamed from `V4` to `V4-engine`
+- Updated all references: `v4vm` → `v4engine`, library names, GitHub URLs
+- Applied code formatting to CMakeLists.txt
+
+## [0.10.0] - 2025-11-03
+
+### Added
+- C-compatible `errors.h` header for platform integration
+- RTOS error codes: `V4_ERR_TASK_*` for task management errors
+- Support for both C and C++ error handling APIs
+
 ## [0.9.1] - 2025-11-03
 
 ### Added
