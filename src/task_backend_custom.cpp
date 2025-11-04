@@ -76,11 +76,11 @@ extern "C" int v4_backend_task_spawn(Vm *vm, uint16_t word_idx, uint8_t priority
                                      uint16_t ds_size, uint16_t rs_size)
 {
   if (!vm)
-    return -3;
+    return V4_ERR(InvalidArg);
 
   // Validate word index
   if (word_idx >= vm->word_count)
-    return -3;
+    return V4_ERR(InvalidWordIdx);
 
   // Find free task slot
   int task_id = -1;
@@ -94,7 +94,7 @@ extern "C" int v4_backend_task_spawn(Vm *vm, uint16_t word_idx, uint8_t priority
   }
 
   if (task_id < 0)
-    return -1;  // Task table full
+    return V4_ERR(TaskLimit);
 
   v4_task_t *task = &vm->scheduler.tasks[task_id];
 
@@ -117,7 +117,7 @@ extern "C" int v4_backend_task_spawn(Vm *vm, uint16_t word_idx, uint8_t priority
       free(task->rs_base);
     task->ds_base = nullptr;
     task->rs_base = nullptr;
-    return -2;  // Out of memory
+    return V4_ERR(NoMemory);
   }
 
   // Initialize task state
@@ -230,13 +230,13 @@ extern "C" v4_err v4_backend_task_send(Vm *vm, uint8_t dst_task, uint8_t msg_typ
 
   // Validate target task (allow 0xFF for broadcast)
   if (dst_task >= V4_MAX_TASKS && dst_task != 0xFF)
-    return -2;
+    return V4_ERR(InvalidArg);
 
   v4_msg_queue_t *queue = &vm->msg_queue;
 
   // Check if queue is full
   if (queue->count >= V4_MSG_QUEUE_SIZE)
-    return -1;
+    return V4_ERR(MsgQueueFull);
 
   // Create message
   v4_message_t *msg = &queue->queue[queue->write_idx];
@@ -257,7 +257,7 @@ extern "C" int v4_backend_task_receive(Vm *vm, uint8_t msg_type, int32_t *data,
                                        uint8_t *src_task)
 {
   if (!vm)
-    return -1;
+    return V4_ERR(InvalidArg);
 
   v4_msg_queue_t *queue = &vm->msg_queue;
   uint8_t current_task = vm->scheduler.current_task;
@@ -301,7 +301,7 @@ extern "C" int v4_backend_task_receive_blocking(Vm *vm, uint8_t msg_type, int32_
                                                 uint8_t *src_task, uint32_t timeout_ms)
 {
   if (!vm)
-    return -1;
+    return V4_ERR(InvalidArg);
 
   uint32_t start_tick = v4_task_platform_get_tick_ms();
 

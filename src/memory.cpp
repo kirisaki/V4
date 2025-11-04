@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "v4/errors.hpp"
 #include "v4/internal/vm.h"  // internal Vm definition (your repo)
 #include "v4/vm_api.h"
 
@@ -54,7 +55,7 @@ v4_err v4_mem_read32_core(Vm *vm, v4_u32 addr, v4_u32 *out)
       return e;
     const V4_Mmio *m = &vm->mmio[mi];
     if (!m->read32)
-      return -13;  // forbidden -> treat as OOB
+      return V4_ERR(OobMemory);  // forbidden -> treat as OOB
     return m->read32(m->user, addr, out);
   }
 
@@ -81,7 +82,7 @@ v4_err v4_mem_write32_core(Vm *vm, v4_u32 addr, v4_u32 val)
       return e;
     const V4_Mmio *m = &vm->mmio[mi];
     if (!m->write32)
-      return -13;  // forbidden
+      return V4_ERR(OobMemory);  // forbidden
     return m->write32(m->user, addr, val);
   }
 
@@ -227,7 +228,7 @@ extern "C" v4_err vm_register_mmio(struct Vm *vmp, const V4_Mmio *list, int coun
 {
   Vm *vm = (Vm *)vmp;
   if (!vm || !list || count <= 0)
-    return -1;
+    return V4_ERR(InvalidArg);
   int appended = 0;
   for (int i = 0; i < count; ++i)
   {
@@ -236,5 +237,5 @@ extern "C" v4_err vm_register_mmio(struct Vm *vmp, const V4_Mmio *list, int coun
     vm->mmio[vm->mmio_count++] = list[i];
     ++appended;
   }
-  return (appended == count) ? 0 : -1;
+  return (appended == count) ? V4_ERR(OK) : V4_ERR(InvalidArg);
 }

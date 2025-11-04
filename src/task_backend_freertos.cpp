@@ -125,11 +125,11 @@ extern "C" int v4_backend_task_spawn(Vm *vm, uint16_t word_idx, uint8_t priority
                                      uint16_t ds_size, uint16_t rs_size)
 {
   if (!vm)
-    return -3;
+    return V4_ERR(InvalidArg);
 
   // Validate word index
   if (word_idx >= vm->word_count)
-    return -3;
+    return V4_ERR(InvalidWordIdx);
 
   // Find free task slot
   int task_id = -1;
@@ -143,7 +143,7 @@ extern "C" int v4_backend_task_spawn(Vm *vm, uint16_t word_idx, uint8_t priority
   }
 
   if (task_id < 0)
-    return -1;  // Task table full
+    return V4_ERR(TaskLimit);
 
   v4_task_t *task = &vm->scheduler.tasks[task_id];
 
@@ -169,7 +169,7 @@ extern "C" int v4_backend_task_spawn(Vm *vm, uint16_t word_idx, uint8_t priority
   } *params = (decltype(params))pvPortMalloc(sizeof(*params));
 
   if (!params)
-    return -2;  // Out of memory
+    return V4_ERR(NoMemory);
 
   params->vm = vm;
   params->word_idx = word_idx;
@@ -186,7 +186,7 @@ extern "C" int v4_backend_task_spawn(Vm *vm, uint16_t word_idx, uint8_t priority
   {
     vPortFree(params);
     task->state = V4_TASK_STATE_DEAD;
-    return -2;  // Task creation failed
+    return V4_ERR(NoMemory);
   }
 
   vm->scheduler.task_count++;
@@ -290,10 +290,10 @@ extern "C" v4_err v4_backend_task_send(Vm *vm, uint8_t dst_task, uint8_t msg_typ
 
   // Validate target task (allow 0xFF for broadcast)
   if (dst_task >= V4_MAX_TASKS && dst_task != 0xFF)
-    return -2;
+    return V4_ERR(InvalidArg);
 
   if (msg_queue == NULL)
-    return -1;
+    return V4_ERR(InvalidArg);
 
   // Create message
   v4_message_t msg;
@@ -306,7 +306,7 @@ extern "C" v4_err v4_backend_task_send(Vm *vm, uint8_t dst_task, uint8_t msg_typ
   // Send to FreeRTOS queue (non-blocking)
   BaseType_t result = xQueueSend(msg_queue, &msg, 0);
   if (result != pdPASS)
-    return -1;  // Queue full
+    return V4_ERR(MsgQueueFull);
 
   return V4_ERR(OK);
 }
@@ -315,7 +315,7 @@ extern "C" int v4_backend_task_receive(Vm *vm, uint8_t msg_type, int32_t *data,
                                        uint8_t *src_task)
 {
   if (!vm)
-    return -1;
+    return V4_ERR(InvalidArg);
 
   if (msg_queue == NULL)
     return 0;
@@ -354,7 +354,7 @@ extern "C" int v4_backend_task_receive_blocking(Vm *vm, uint8_t msg_type, int32_
                                                 uint8_t *src_task, uint32_t timeout_ms)
 {
   if (!vm)
-    return -1;
+    return V4_ERR(InvalidArg);
 
   if (msg_queue == NULL)
     return 0;

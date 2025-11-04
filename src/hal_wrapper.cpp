@@ -9,6 +9,7 @@
 #include <cstring>
 
 #include "v4/hal.h"
+#include "v4/hal_error.h"
 #include "v4/v4_hal.h"
 
 /* ========================================================================= */
@@ -35,7 +36,7 @@ extern "C" v4_err v4_hal_gpio_init(int pin, v4_hal_gpio_mode mode)
       hal_mode = HAL_GPIO_INPUT_PULLDOWN;
       break;
     default:
-      return -1;  // HAL_ERR_PARAM
+      return HAL_ERR_PARAM;
   }
 
   return hal_gpio_mode(pin, hal_mode);
@@ -51,7 +52,7 @@ extern "C" v4_err v4_hal_gpio_read(int pin, int* out_value)
 {
   if (!out_value)
   {
-    return -1;  // HAL_ERR_PARAM
+    return HAL_ERR_PARAM;
   }
 
   hal_gpio_value_t hal_value;
@@ -74,7 +75,7 @@ extern "C" v4_err v4_hal_uart_init(int port, int baudrate)
 {
   if (port < 0 || port >= 4)
   {
-    return -1;  // HAL_ERR_PARAM
+    return HAL_ERR_PARAM;
   }
 
   // Close existing handle if open
@@ -92,26 +93,26 @@ extern "C" v4_err v4_hal_uart_init(int port, int baudrate)
   config.stop_bits = 1;  // 1 or 2
 
   uart_handles[port] = hal_uart_open(port, &config);
-  return uart_handles[port] ? 0 : -4;  // HAL_OK or HAL_ERR_NODEV
+  return uart_handles[port] ? HAL_OK : HAL_ERR_NODEV;
 }
 
 extern "C" v4_err v4_hal_uart_putc(int port, char c)
 {
   if (port < 0 || port >= 4 || !uart_handles[port])
   {
-    return -1;  // HAL_ERR_PARAM or HAL_ERR_NODEV
+    return HAL_ERR_PARAM;
   }
 
   uint8_t byte = static_cast<uint8_t>(c);
   int ret = hal_uart_write(uart_handles[port], &byte, 1);
-  return (ret == 1) ? 0 : -1;
+  return (ret == 1) ? HAL_OK : HAL_ERR_IO;
 }
 
 extern "C" v4_err v4_hal_uart_getc(int port, char* out_c)
 {
   if (port < 0 || port >= 4 || !uart_handles[port] || !out_c)
   {
-    return -1;  // HAL_ERR_PARAM or HAL_ERR_NODEV
+    return HAL_ERR_PARAM;
   }
 
   uint8_t byte;
@@ -119,28 +120,28 @@ extern "C" v4_err v4_hal_uart_getc(int port, char* out_c)
   if (ret == 1)
   {
     *out_c = static_cast<char>(byte);
-    return 0;
+    return HAL_OK;
   }
-  return -1;  // No data available or error
+  return HAL_ERR_IO;
 }
 
 extern "C" v4_err v4_hal_uart_write(int port, const char* buf, int len)
 {
   if (port < 0 || port >= 4 || !uart_handles[port] || !buf || len < 0)
   {
-    return -1;  // HAL_ERR_PARAM
+    return HAL_ERR_PARAM;
   }
 
   int ret = hal_uart_write(uart_handles[port], reinterpret_cast<const uint8_t*>(buf),
                            static_cast<size_t>(len));
-  return (ret == len) ? 0 : -1;
+  return (ret == len) ? HAL_OK : HAL_ERR_IO;
 }
 
 extern "C" v4_err v4_hal_uart_read(int port, char* buf, int max_len, int* out_len)
 {
   if (port < 0 || port >= 4 || !uart_handles[port] || !buf || max_len < 0 || !out_len)
   {
-    return -1;  // HAL_ERR_PARAM
+    return HAL_ERR_PARAM;
   }
 
   int ret = hal_uart_read(uart_handles[port], reinterpret_cast<uint8_t*>(buf),
@@ -148,9 +149,9 @@ extern "C" v4_err v4_hal_uart_read(int port, char* buf, int max_len, int* out_le
   if (ret >= 0)
   {
     *out_len = ret;
-    return 0;
+    return HAL_OK;
   }
-  return -1;
+  return HAL_ERR_IO;
 }
 
 /* ========================================================================= */
@@ -185,14 +186,14 @@ extern "C" v4_err v4_hal_putc(char c)
 {
   uint8_t byte = static_cast<uint8_t>(c);
   int ret = hal_console_write(&byte, 1);
-  return (ret == 1) ? 0 : -1;
+  return (ret == 1) ? HAL_OK : HAL_ERR_IO;
 }
 
 extern "C" v4_err v4_hal_getc(char* out_c)
 {
   if (!out_c)
   {
-    return -1;  // HAL_ERR_PARAM
+    return HAL_ERR_PARAM;
   }
 
   uint8_t byte;
@@ -200,9 +201,9 @@ extern "C" v4_err v4_hal_getc(char* out_c)
   if (ret == 1)
   {
     *out_c = static_cast<char>(byte);
-    return 0;
+    return HAL_OK;
   }
-  return -1;  // No data available or error
+  return HAL_ERR_IO;
 }
 
 /* ========================================================================= */

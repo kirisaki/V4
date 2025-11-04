@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "doctest.h"
+#include "v4/errors.h"
 #include "v4/internal/scheduler.hpp"
 #include "v4/internal/vm.h"
 #include "v4/task.h"
@@ -101,13 +102,13 @@ TEST_CASE("Task spawn and exit")
 
     // Try to spawn one more
     int task_id = vm_task_spawn(vm, word_idx, 100, 128, 32);
-    CHECK(task_id == -1);  // Table full
+    CHECK(task_id == V4_ERR_TaskLimit);
   }
 
   SUBCASE("Invalid word index")
   {
     int task_id = vm_task_spawn(vm, 999, 100, 128, 32);
-    CHECK(task_id == -3);  // Invalid word_idx
+    CHECK(task_id == V4_ERR_InvalidWordIdx);
   }
 
   vm_task_cleanup(vm);
@@ -221,7 +222,7 @@ TEST_CASE("Message passing")
 
     // Try to send one more
     v4_err err = vm_task_send(vm, 1, 0x01, 999);
-    CHECK(err == -1);  // Queue full
+    CHECK(err == V4_ERR_MsgQueueFull);
   }
 
   vm_task_cleanup(vm);
