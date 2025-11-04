@@ -1,8 +1,7 @@
-#include "v4/task.h"
-
 #include "v4/errors.hpp"
 #include "v4/internal/task_backend.h"
 #include "v4/internal/vm.h"
+#include "v4/task.h"
 
 /* ========================================================================= */
 /* Message Passing API (Backend Wrapper)                                    */
@@ -12,7 +11,8 @@
  * All implementation details are delegated to the backend layer.
  */
 
-extern "C" v4_err vm_task_send(Vm *vm, uint8_t target_task, uint8_t msg_type, int32_t data)
+extern "C" v4_err vm_task_send(Vm *vm, uint8_t target_task, uint8_t msg_type,
+                               int32_t data)
 {
   return v4_backend_task_send(vm, target_task, msg_type, data);
 }

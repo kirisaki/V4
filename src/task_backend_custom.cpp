@@ -1,10 +1,9 @@
-#include "v4/internal/task_backend.h"
-
 #include <cstdlib>
 #include <cstring>
 
 #include "v4/errors.hpp"
 #include "v4/internal/scheduler.hpp"
+#include "v4/internal/task_backend.h"
 #include "v4/internal/vm.h"
 #include "v4/task.h"
 #include "v4/task_platform.h"
@@ -223,7 +222,8 @@ extern "C" v4_err v4_backend_task_get_state(Vm *vm, uint8_t task_id, uint8_t *st
 /* Message Passing Backend Implementation                                    */
 /* ========================================================================= */
 
-extern "C" v4_err v4_backend_task_send(Vm *vm, uint8_t dst_task, uint8_t msg_type, int32_t data)
+extern "C" v4_err v4_backend_task_send(Vm *vm, uint8_t dst_task, uint8_t msg_type,
+                                       int32_t data)
 {
   if (!vm)
     return V4_ERR(InvalidArg);

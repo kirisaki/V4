@@ -98,7 +98,8 @@ extern "C"
    * @param data Data payload
    * @return 0 on success, negative on error
    */
-  v4_err v4_backend_task_send(struct Vm *vm, uint8_t dst_task, uint8_t msg_type, int32_t data);
+  v4_err v4_backend_task_send(struct Vm *vm, uint8_t dst_task, uint8_t msg_type,
+                              int32_t data);
 
   /**
    * @brief Receive message (non-blocking, backend implementation)
@@ -109,7 +110,8 @@ extern "C"
    * @param src_task Output: source task ID
    * @return 1 if message received, 0 if queue empty, negative on error
    */
-  int v4_backend_task_receive(struct Vm *vm, uint8_t msg_type, int32_t *data, uint8_t *src_task);
+  int v4_backend_task_receive(struct Vm *vm, uint8_t msg_type, int32_t *data,
+                              uint8_t *src_task);
 
   /**
    * @brief Receive message (blocking, backend implementation)

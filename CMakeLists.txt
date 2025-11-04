@@ -38,13 +38,8 @@ set(V4HAL_LOCAL_PATH
 # Core VM Library
 # ============================================================================
 
-set(V4ENGINE_SOURCES
-    src/core.cpp
-    src/memory.cpp
-    src/arena.cpp
-    src/task.cpp
-    src/scheduler.cpp
-    src/message.cpp)
+set(V4ENGINE_SOURCES src/core.cpp src/memory.cpp src/arena.cpp src/task.cpp
+                     src/scheduler.cpp src/message.cpp)
 
 # Add task backend implementation based on selection
 if(V4_TASK_BACKEND STREQUAL "CUSTOM")
@@ -54,7 +49,8 @@ elseif(V4_TASK_BACKEND STREQUAL "FREERTOS")
   list(APPEND V4ENGINE_SOURCES src/task_backend_freertos.cpp)
   message(STATUS "Using FreeRTOS task backend")
 else()
-  message(FATAL_ERROR "Invalid V4_TASK_BACKEND: ${V4_TASK_BACKEND}. Must be CUSTOM or FREERTOS")
+  message(
+    FATAL_ERROR "Invalid V4_TASK_BACKEND: ${V4_TASK_BACKEND}. Must be CUSTOM or FREERTOS")
 endif()
 
 add_library(v4engine STATIC ${V4ENGINE_SOURCES})
