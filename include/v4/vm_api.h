@@ -377,6 +377,27 @@ extern "C"
    */
   int v4_vm_version(void);
 
+  /**
+   * @brief VM panic handler
+   *
+   * Collects error information and outputs diagnostic details to UART/console.
+   * This API should be called from all error paths.
+   *
+   * Output information:
+   * - Error code and message
+   * - Program Counter (PC)
+   * - Data Stack depth and top 2 elements
+   * - Return Stack depth and call trace
+   *
+   * @param vm         VM instance
+   * @param error_code Error code (Err enumeration value)
+   * @return Always returns error_code (allows usage as: return vm_panic(...))
+   *
+   * @note This API only performs diagnostic output and does not modify VM state.
+   * @note Output destination is stdout (can be redirected to UART via HAL).
+   */
+  v4_err vm_panic(struct Vm *vm, v4_err error_code);
+
   /* ------------------------------------------------------------------------- */
   /* Error handling notes                                                      */
   /* ------------------------------------------------------------------------- */

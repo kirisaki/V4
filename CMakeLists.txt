@@ -44,7 +44,7 @@ set(FREERTOS_PATH
 # ============================================================================
 
 set(V4ENGINE_SOURCES src/core.cpp src/memory.cpp src/arena.cpp src/task.cpp
-                     src/scheduler.cpp src/message.cpp)
+                     src/scheduler.cpp src/message.cpp src/panic.cpp)
 
 # Add task backend implementation based on selection
 if(V4_TASK_BACKEND STREQUAL "CUSTOM")

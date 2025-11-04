@@ -7,19 +7,19 @@ extern "C" {
 #endif
 
 /**
- * @brief VMパニック時の診断情報
+ * @brief VM panic diagnostic information
  *
- * VMがエラー状態に陥った際の診断情報を保持する構造体。
- * vm_panic()関数によって収集され、診断出力に使用される。
+ * Structure holding diagnostic information when VM enters an error state.
+ * Collected by vm_panic() function and used for diagnostic output.
  */
 typedef struct V4PanicInfo {
-    int32_t error_code;      /**< エラーコード（Err列挙値） */
+    int32_t error_code;      /**< Error code (Err enumeration value) */
     uint32_t pc;             /**< Program Counter */
-    int32_t tos;             /**< Top of Stack（有効時のみ） */
-    int32_t nos;             /**< Next on Stack（有効時のみ） */
-    uint8_t ds_depth;        /**< Data Stack深さ */
-    uint8_t rs_depth;        /**< Return Stack深さ */
-    bool has_stack_data;     /**< スタックデータが有効か */
+    int32_t tos;             /**< Top of Stack (when valid) */
+    int32_t nos;             /**< Next on Stack (when valid) */
+    uint8_t ds_depth;        /**< Data Stack depth */
+    uint8_t rs_depth;        /**< Return Stack depth */
+    bool has_stack_data;     /**< Whether stack data is valid */
 } V4PanicInfo;
 
 #ifdef __cplusplus

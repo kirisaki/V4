@@ -6,21 +6,21 @@
 namespace v4 {
 
 /**
- * @brief VMパニック時の診断情報（C++ラッパー）
+ * @brief VM panic diagnostic information (C++ wrapper)
  *
- * C APIのV4PanicInfoをC++で扱いやすくするラッパークラス。
+ * C++ wrapper class for V4PanicInfo to make it easier to use in C++.
  */
 struct PanicInfo {
-    Err error;               /**< エラーコード（Err列挙型） */
+    Err error;               /**< Error code (Err enumeration) */
     uint32_t pc;             /**< Program Counter */
-    int32_t tos;             /**< Top of Stack（有効時のみ） */
-    int32_t nos;             /**< Next on Stack（有効時のみ） */
-    uint8_t ds_depth;        /**< Data Stack深さ */
-    uint8_t rs_depth;        /**< Return Stack深さ */
-    bool has_stack_data;     /**< スタックデータが有効か */
+    int32_t tos;             /**< Top of Stack (when valid) */
+    int32_t nos;             /**< Next on Stack (when valid) */
+    uint8_t ds_depth;        /**< Data Stack depth */
+    uint8_t rs_depth;        /**< Return Stack depth */
+    bool has_stack_data;     /**< Whether stack data is valid */
 
     /**
-     * @brief C API構造体から変換
+     * @brief Convert from C API structure
      */
     static PanicInfo from_c(const V4PanicInfo& c_info) {
         return PanicInfo{
@@ -35,7 +35,7 @@ struct PanicInfo {
     }
 
     /**
-     * @brief C API構造体へ変換
+     * @brief Convert to C API structure
      */
     V4PanicInfo to_c() const {
         return V4PanicInfo{
