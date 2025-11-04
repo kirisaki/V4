@@ -76,7 +76,7 @@ extern "C" void vm_reset(Vm* vm)
 static inline v4_err ds_push(Vm* vm, v4_i32 v)
 {
   if (vm->sp >= vm->DS + 256)
-    return V4_ERR(StackOverflow);
+    return vm_panic(vm, V4_ERR(StackOverflow));
   *vm->sp++ = v;
   return V4_ERR(OK);
 }
@@ -84,7 +84,7 @@ static inline v4_err ds_push(Vm* vm, v4_i32 v)
 static inline v4_err ds_pop(Vm* vm, v4_i32* out)
 {
   if (vm->sp <= vm->DS)
-    return V4_ERR(StackUnderflow);
+    return vm_panic(vm, V4_ERR(StackUnderflow));
   *out = *--vm->sp;
   return V4_ERR(OK);
 }
@@ -92,7 +92,7 @@ static inline v4_err ds_pop(Vm* vm, v4_i32* out)
 static inline v4_err ds_peek(const Vm* vm, int i, v4_i32* out)
 {
   if (vm->sp - 1 - i < vm->DS)
-    return V4_ERR(StackUnderflow);
+    return vm_panic(const_cast<Vm*>(vm), V4_ERR(StackUnderflow));
   *out = *(vm->sp - 1 - i);
   return V4_ERR(OK);
 }
@@ -102,7 +102,7 @@ static inline v4_err ds_peek(const Vm* vm, int i, v4_i32* out)
 static inline v4_err rs_push(Vm* vm, v4_i32 v)
 {
   if (vm->rp >= vm->RS + 64)
-    return V4_ERR(StackOverflow);
+    return vm_panic(vm, V4_ERR(StackOverflow));
   *vm->rp++ = v;
   return V4_ERR(OK);
 }
@@ -110,7 +110,7 @@ static inline v4_err rs_push(Vm* vm, v4_i32 v)
 static inline v4_err rs_pop(Vm* vm, v4_i32* out)
 {
   if (vm->rp <= vm->RS)
-    return V4_ERR(StackUnderflow);
+    return vm_panic(vm, V4_ERR(StackUnderflow));
   *out = *--vm->rp;
   return V4_ERR(OK);
 }
@@ -118,7 +118,7 @@ static inline v4_err rs_pop(Vm* vm, v4_i32* out)
 static inline v4_err rs_peek(const Vm* vm, int i, v4_i32* out)
 {
   if (vm->rp - 1 - i < vm->RS)
-    return V4_ERR(StackUnderflow);
+    return vm_panic(const_cast<Vm*>(vm), V4_ERR(StackUnderflow));
   *out = *(vm->rp - 1 - i);
   return V4_ERR(OK);
 }
@@ -153,7 +153,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LIT:
       {
         if (ip + 4 > ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         v4_i32 k = read_i32_le(ip);
         ip += 4;
         if (v4_err e = ds_push(vm, k))
@@ -249,7 +249,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         if (v4_err e = ds_pop(vm, &a))
           return e;
         if (b == 0)
-          return V4_ERR(DivByZero);
+          return vm_panic(vm, V4_ERR(DivByZero));
         if (v4_err e = ds_push(vm, a / b))
           return e;
         break;
@@ -263,7 +263,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         if (v4_err e = ds_pop(vm, &a))
           return e;
         if (b == 0)
-          return V4_ERR(DivByZero);
+          return vm_panic(vm, V4_ERR(DivByZero));
         if (v4_err e = ds_push(vm, a % b))
           return e;
         break;
@@ -280,7 +280,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         b = (v4_u32)b_i32;
         a = (v4_u32)a_i32;
         if (b == 0)
-          return V4_ERR(DivByZero);
+          return vm_panic(vm, V4_ERR(DivByZero));
         if (v4_err e = ds_push(vm, (v4_i32)(a / b)))
           return e;
         break;
@@ -297,7 +297,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         b = (v4_u32)b_i32;
         a = (v4_u32)a_i32;
         if (b == 0)
-          return V4_ERR(DivByZero);
+          return vm_panic(vm, V4_ERR(DivByZero));
         if (v4_err e = ds_push(vm, (v4_i32)(a % b)))
           return e;
         break;
@@ -515,12 +515,12 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::JMP:
       {
         if (ip + 2 > ip_end)
-          return V4_ERR(TruncatedJump);
+          return vm_panic(vm, V4_ERR(TruncatedJump));
         int16_t off = read_i16_le(ip);
         ip += 2;
         const v4_u8* tgt = ip + off;
         if (tgt < bc || tgt > ip_end)
-          return V4_ERR(JumpOutOfRange);
+          return vm_panic(vm, V4_ERR(JumpOutOfRange));
         ip = tgt;
         break;
       }
@@ -528,7 +528,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::JZ:
       {
         if (ip + 2 > ip_end)
-          return V4_ERR(TruncatedJump);
+          return vm_panic(vm, V4_ERR(TruncatedJump));
         int16_t off = read_i16_le(ip);
         ip += 2;
         v4_i32 cond;
@@ -538,7 +538,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         {
           const v4_u8* tgt = ip + off;
           if (tgt < bc || tgt > ip_end)
-            return V4_ERR(JumpOutOfRange);
+            return vm_panic(vm, V4_ERR(JumpOutOfRange));
           ip = tgt;
         }
         break;
@@ -547,7 +547,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::JNZ:
       {
         if (ip + 2 > ip_end)
-          return V4_ERR(TruncatedJump);
+          return vm_panic(vm, V4_ERR(TruncatedJump));
         int16_t off = read_i16_le(ip);
         ip += 2;
         v4_i32 cond;
@@ -557,7 +557,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
         {
           const v4_u8* tgt = ip + off;
           if (tgt < bc || tgt > ip_end)
-            return V4_ERR(JumpOutOfRange);
+            return vm_panic(vm, V4_ERR(JumpOutOfRange));
           ip = tgt;
         }
         break;
@@ -750,7 +750,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LIT_U8:
       {
         if (ip >= ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         v4_u32 val = (v4_u32)*ip++;
         if (v4_err e = ds_push(vm, (v4_i32)val))
           return e;
@@ -760,7 +760,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LIT_I8:
       {
         if (ip >= ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         int8_t val = (int8_t)*ip++;
         if (v4_err e = ds_push(vm, (v4_i32)val))
           return e;
@@ -770,7 +770,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LIT_I16:
       {
         if (ip + 2 > ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         int16_t val = read_i16_le(ip);
         ip += 2;
         if (v4_err e = ds_push(vm, (v4_i32)val))
@@ -782,12 +782,12 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LGET:
       {
         if (ip >= ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         uint8_t idx = *ip++;
         if (!vm->fp)
-          return V4_ERR(InvalidArg);  // No local frame
+          return vm_panic(vm, V4_ERR(InvalidArg));  // No local frame
         if (vm->fp + idx >= vm->rp)
-          return V4_ERR(StackUnderflow);  // Out of bounds
+          return vm_panic(vm, V4_ERR(StackUnderflow));  // Out of bounds
         if (v4_err e = ds_push(vm, vm->fp[idx]))
           return e;
         break;
@@ -796,12 +796,12 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LSET:
       {
         if (ip >= ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         uint8_t idx = *ip++;
         if (!vm->fp)
-          return V4_ERR(InvalidArg);  // No local frame
+          return vm_panic(vm, V4_ERR(InvalidArg));  // No local frame
         if (vm->fp + idx >= vm->rp)
-          return V4_ERR(StackUnderflow);  // Out of bounds
+          return vm_panic(vm, V4_ERR(StackUnderflow));  // Out of bounds
         v4_i32 val;
         if (v4_err e = ds_pop(vm, &val))
           return e;
@@ -812,12 +812,12 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LTEE:
       {
         if (ip >= ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         uint8_t idx = *ip++;
         if (!vm->fp)
-          return V4_ERR(InvalidArg);  // No local frame
+          return vm_panic(vm, V4_ERR(InvalidArg));  // No local frame
         if (vm->fp + idx >= vm->rp)
-          return V4_ERR(StackUnderflow);  // Out of bounds
+          return vm_panic(vm, V4_ERR(StackUnderflow));  // Out of bounds
         v4_i32 val;
         if (v4_err e = ds_peek(vm, 0, &val))
           return e;
@@ -828,9 +828,9 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LGET0:
       {
         if (!vm->fp)
-          return V4_ERR(InvalidArg);
+          return vm_panic(vm, V4_ERR(InvalidArg));
         if (vm->fp >= vm->rp)
-          return V4_ERR(StackUnderflow);
+          return vm_panic(vm, V4_ERR(StackUnderflow));
         if (v4_err e = ds_push(vm, vm->fp[0]))
           return e;
         break;
@@ -839,9 +839,9 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LGET1:
       {
         if (!vm->fp)
-          return V4_ERR(InvalidArg);
+          return vm_panic(vm, V4_ERR(InvalidArg));
         if (vm->fp + 1 >= vm->rp)
-          return V4_ERR(StackUnderflow);
+          return vm_panic(vm, V4_ERR(StackUnderflow));
         if (v4_err e = ds_push(vm, vm->fp[1]))
           return e;
         break;
@@ -850,9 +850,9 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LSET0:
       {
         if (!vm->fp)
-          return V4_ERR(InvalidArg);
+          return vm_panic(vm, V4_ERR(InvalidArg));
         if (vm->fp >= vm->rp)
-          return V4_ERR(StackUnderflow);
+          return vm_panic(vm, V4_ERR(StackUnderflow));
         v4_i32 val;
         if (v4_err e = ds_pop(vm, &val))
           return e;
@@ -863,9 +863,9 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LSET1:
       {
         if (!vm->fp)
-          return V4_ERR(InvalidArg);
+          return vm_panic(vm, V4_ERR(InvalidArg));
         if (vm->fp + 1 >= vm->rp)
-          return V4_ERR(StackUnderflow);
+          return vm_panic(vm, V4_ERR(StackUnderflow));
         v4_i32 val;
         if (v4_err e = ds_pop(vm, &val))
           return e;
@@ -876,12 +876,12 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LINC:
       {
         if (ip >= ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         uint8_t idx = *ip++;
         if (!vm->fp)
-          return V4_ERR(InvalidArg);
+          return vm_panic(vm, V4_ERR(InvalidArg));
         if (vm->fp + idx >= vm->rp)
-          return V4_ERR(StackUnderflow);
+          return vm_panic(vm, V4_ERR(StackUnderflow));
         vm->fp[idx]++;
         break;
       }
@@ -889,12 +889,12 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::LDEC:
       {
         if (ip >= ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         uint8_t idx = *ip++;
         if (!vm->fp)
-          return V4_ERR(InvalidArg);
+          return vm_panic(vm, V4_ERR(InvalidArg));
         if (vm->fp + idx >= vm->rp)
-          return V4_ERR(StackUnderflow);
+          return vm_panic(vm, V4_ERR(StackUnderflow));
         vm->fp[idx]--;
         break;
       }
@@ -903,16 +903,16 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       case v4::Op::CALL:
       {
         if (ip + 2 > ip_end)
-          return V4_ERR(TruncatedJump);
+          return vm_panic(vm, V4_ERR(TruncatedJump));
         uint16_t word_idx = (uint16_t)ip[0] | ((uint16_t)ip[1] << 8);
         ip += 2;
 
         if (word_idx >= (uint16_t)vm->word_count)
-          return V4_ERR(InvalidWordIdx);
+          return vm_panic(vm, V4_ERR(InvalidWordIdx));
 
         Word* word = &vm->words[word_idx];
         if (!word->code || word->code_len <= 0)
-          return V4_ERR(InvalidArg);
+          return vm_panic(vm, V4_ERR(InvalidArg));
 
         // Save current frame pointer (for nested calls)
         v4_i32* old_fp = vm->fp;
@@ -936,7 +936,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       {
         // Read SYS ID
         if (ip >= ip_end)
-          return V4_ERR(TruncatedLiteral);
+          return vm_panic(vm, V4_ERR(TruncatedLiteral));
         uint8_t sys_id = *ip++;
 
         v4_err err = V4_ERR(OK);
@@ -1180,7 +1180,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
           }
 
           default:
-            return V4_ERR(UnknownOp);
+            return vm_panic(vm, V4_ERR(UnknownOp));
         }
         break;
       }
@@ -1335,11 +1335,11 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       }
 
       default:
-        return V4_ERR(UnknownOp);
+        return vm_panic(vm, V4_ERR(UnknownOp));
     }
   }
 
-  return V4_ERR(FellOffEnd);
+  return vm_panic(vm, V4_ERR(FellOffEnd));
 }
 
 /* ======================= Word management API ============================= */
@@ -1351,7 +1351,7 @@ extern "C" int vm_register_word(Vm* vm, const char* name, const uint8_t* code,
     return V4_ERR(InvalidArg);
 
   if (vm->word_count >= Vm::V4_MAX_WORDS)
-    return V4_ERR(DictionaryFull);
+    return vm_panic(vm, V4_ERR(DictionaryFull));
 
   int idx = vm->word_count;
 
@@ -1365,7 +1365,7 @@ extern "C" int vm_register_word(Vm* vm, const char* name, const uint8_t* code,
     {
       char* name_copy = static_cast<char*>(v4_arena_alloc(vm->arena, len, 1));
       if (!name_copy)
-        return V4_ERR(InvalidArg);  // Arena allocation failed
+        return vm_panic(vm, V4_ERR(InvalidArg));  // Arena allocation failed
       memcpy(name_copy, name, len);
       vm->words[idx].name = name_copy;
     }
@@ -1373,7 +1373,7 @@ extern "C" int vm_register_word(Vm* vm, const char* name, const uint8_t* code,
     {
       vm->words[idx].name = strdup(name);
       if (!vm->words[idx].name)
-        return V4_ERR(InvalidArg);  // strdup failed (out of memory)
+        return vm_panic(vm, V4_ERR(InvalidArg));  // strdup failed (out of memory)
     }
   }
   else
@@ -1550,7 +1550,7 @@ extern "C" v4_err vm_ds_restore(struct Vm* vm, const struct VmStackSnapshot* sna
 
   // Check if restored stack would fit
   if (snapshot->depth > 256)
-    return V4_ERR(StackOverflow);
+    return vm_panic(vm, V4_ERR(StackOverflow));
 
   // Clear current stack
   vm->sp = vm->DS;

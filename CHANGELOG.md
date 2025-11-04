@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **VM panic handler system** for debugging and diagnostics
+  - `vm_panic()` API to collect and display error information
+  - Panic information structures (`V4PanicInfo`, `v4::PanicInfo`)
+  - Diagnostic output including:
+    - Error code with human-readable message
+    - Program Counter (PC) value
+    - Data Stack depth and top 2 elements (TOS, NOS)
+    - Return Stack depth with call trace (up to 16 entries)
+  - All error paths in VM core now call `vm_panic()` for automatic diagnostic logging
+  - Stack helper functions (ds_push, ds_pop, rs_push, rs_pop) integrated with panic handler
+  - Opcode execution errors (division by zero, stack overflow/underflow, invalid jumps, etc.) logged automatically
+  - Test suite with 5 panic handler test cases covering:
+    - Empty stack panic
+    - Stack data display (TOS/NOS)
+    - Multiple stack items
+    - Stack overflow detection
+    - Stack underflow detection
+
 ## [0.11.1] - 2025-11-04
 
 ### Fixed

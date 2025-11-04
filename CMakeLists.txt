@@ -43,8 +43,14 @@ set(FREERTOS_PATH
 # Core VM Library
 # ============================================================================
 
-set(V4ENGINE_SOURCES src/core.cpp src/memory.cpp src/arena.cpp src/task.cpp
-                     src/scheduler.cpp src/message.cpp)
+set(V4ENGINE_SOURCES
+    src/core.cpp
+    src/memory.cpp
+    src/arena.cpp
+    src/task.cpp
+    src/scheduler.cpp
+    src/message.cpp
+    src/panic.cpp)
 
 # Add task backend implementation based on selection
 if(V4_TASK_BACKEND STREQUAL "CUSTOM")
@@ -217,6 +223,9 @@ if(V4_BUILD_TESTS)
 
     # Task System Tests
     add_v4_test(test_task tests/test_task.cpp)
+
+    # Panic Handler Tests
+    add_v4_test(test_panic tests/test_panic.cpp)
 
     # C API Tests
     add_executable(test_vm_c tests/test_vm_c.c)
