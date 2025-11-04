@@ -1,6 +1,6 @@
-# V4 VM Bare-Metal Test for RISC-V 32-bit
+# V4 Engine Bare-Metal Test for RISC-V 32-bit
 
-This directory contains a minimal bare-metal environment for testing V4 VM on RISC-V 32-bit architecture using QEMU.
+This directory contains a minimal bare-metal environment for testing V4 Engine on RISC-V 32-bit architecture using QEMU.
 
 ## Prerequisites
 
@@ -26,8 +26,8 @@ make clean      # Clean build artifacts
 
 ### Output
 ```
-V4 VM Bare-Metal Test
-=====================
+V4 Engine Bare-Metal Test
+=========================
 
 Phase 1: Basic UART output
 Hello from RISC-V bare-metal!
@@ -51,18 +51,18 @@ Test completed successfully!
 - `link.ld`: Linker script for memory layout
 - `uart.h`: Simple UART driver (MMIO-based)
 - `main_simple.c`: Basic test program
-- `main.c`: V4 VM integration (future work)
+- `main.c`: V4 Engine integration (future work)
 
-## Future Work: V4 VM Integration
+## Future Work: V4 Engine Integration
 
-To integrate V4 VM into the bare-metal environment, the following is needed:
+To integrate V4 Engine into the bare-metal environment, the following is needed:
 
 1. **Standard library support**
    - Implement or link malloc/free
    - Provide memcpy, memset, strcmp, etc.
    - Options: newlib, custom minimal implementation
 
-2. **V4 VM source integration**
+2. **V4 Engine source integration**
    - Compile `src/core.cpp` and `src/memory.cpp` with `-fno-exceptions -fno-rtti`
    - Ensure all stdlib dependencies are satisfied
 
@@ -81,7 +81,7 @@ V4 now supports [V4-hal](https://github.com/kirisaki/V4-hal), a C++17 CRTP HAL i
 
 ### Example V4 Integration (main.c)
 
-The `main.c` file contains a template for V4 VM integration:
+The `main.c` file contains a template for V4 Engine integration:
 - Creates VM instance with memory configuration
 - Registers bytecode words
 - Executes simple arithmetic (10 + 32, 7 * 6)

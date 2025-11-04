@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(
-  V4VM
+  V4Engine
   VERSION 0.10.0
   LANGUAGES C CXX)
 
@@ -32,29 +32,29 @@ set(V4HAL_LOCAL_PATH
 # Core VM Library
 # ============================================================================
 
-set(V4VM_SOURCES src/core.cpp src/memory.cpp src/arena.cpp src/task.cpp src/scheduler.cpp
+set(V4ENGINE_SOURCES src/core.cpp src/memory.cpp src/arena.cpp src/task.cpp src/scheduler.cpp
                  src/message.cpp)
 
-add_library(v4vm STATIC ${V4VM_SOURCES})
+add_library(v4engine STATIC ${V4ENGINE_SOURCES})
 
 target_include_directories(
-  v4vm
+  v4engine
   PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
   PRIVATE ${PROJECT_SOURCE_DIR}/include/v4/internal)
 
 # Compiler flags
 if(MSVC)
   target_compile_options(
-    v4vm
+    v4engine
     PRIVATE /W4 # Warning level 4
             /GR- # Disable RTTI
             /EHs-c- # Disable exceptions
   )
   # Configuration-specific optimizations
-  target_compile_options(v4vm PRIVATE $<$<CONFIG:Debug>:/Od> $<$<CONFIG:Release>:/O1>)
+  target_compile_options(v4engine PRIVATE $<$<CONFIG:Debug>:/Od> $<$<CONFIG:Release>:/O1>)
 else()
   target_compile_options(
-    v4vm
+    v4engine
     PRIVATE -Wall # Enable all warnings
             -Wextra # Enable extra warnings
             -fno-exceptions
@@ -63,10 +63,10 @@ else()
             -fdata-sections # Data sections for gc-sections
   )
   if(V4_OPTIMIZE_SIZE)
-    target_compile_options(v4vm PRIVATE -Os)
+    target_compile_options(v4engine PRIVATE -Os)
   endif()
   # Linker flags for size optimization
-  target_link_options(v4vm PRIVATE -Wl,--gc-sections)
+  target_link_options(v4engine PRIVATE -Wl,--gc-sections)
 endif()
 
 # Enable LTO if supported and requested
@@ -77,8 +77,8 @@ if(V4_ENABLE_LTO)
     OUTPUT ipo_output
     LANGUAGES C CXX)
   if(ipo_supported)
-    set_target_properties(v4vm PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
-    message(STATUS "LTO enabled for v4vm")
+    set_target_properties(v4engine PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+    message(STATUS "LTO enabled for v4engine")
   else()
     message(WARNING "LTO not supported: ${ipo_output}")
   endif()
@@ -161,7 +161,7 @@ if(V4_BUILD_TESTS)
     function(add_v4_test TEST_NAME TEST_SOURCE)
       add_executable(${TEST_NAME} ${TEST_SOURCE})
       target_include_directories(${TEST_NAME} PRIVATE ${DOCTEST_INCLUDE_DIR})
-      target_link_libraries(${TEST_NAME} PRIVATE v4vm mock_hal)
+      target_link_libraries(${TEST_NAME} PRIVATE v4engine mock_hal)
       add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
     endfunction()
 
@@ -187,7 +187,7 @@ if(V4_BUILD_TESTS)
     # C API Tests
     add_executable(test_vm_c tests/test_vm_c.c)
     target_include_directories(test_vm_c PRIVATE ${PROJECT_SOURCE_DIR}/include)
-    target_link_libraries(test_vm_c PRIVATE v4vm mock_hal)
+    target_link_libraries(test_vm_c PRIVATE v4engine mock_hal)
     set_target_properties(test_vm_c PROPERTIES LINKER_LANGUAGE CXX)
     add_test(NAME test_vm_c COMMAND test_vm_c)
   endif()
@@ -207,8 +207,8 @@ install(
 
 # Install library
 install(
-  TARGETS v4vm
-  EXPORT V4VMTargets
+  TARGETS v4engine
+  EXPORT V4EngineTargets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
@@ -218,7 +218,7 @@ install(
 # ============================================================================
 
 message(STATUS "")
-message(STATUS "V4VM Configuration Summary:")
+message(STATUS "V4 Engine Configuration Summary:")
 message(STATUS "  Version:              ${PROJECT_VERSION}")
 message(STATUS "  Build type:           ${CMAKE_BUILD_TYPE}")
 message(STATUS "  C++ standard:         ${CMAKE_CXX_STANDARD}")

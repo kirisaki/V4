@@ -35,8 +35,8 @@ static void print_int(int32_t n)
 
 int main(void)
 {
-  uart_puts("V4 VM Bare-Metal Test\r\n");
-  uart_puts("=====================\r\n\r\n");
+  uart_puts("V4 Engine Bare-Metal Test\r\n");
+  uart_puts("=========================\r\n\r\n");
 
   uart_puts("Phase 1: Basic UART output\r\n");
   uart_puts("Hello from RISC-V bare-metal!\r\n\r\n");

@@ -444,6 +444,6 @@ Full integration tests require real hardware or QEMU.
 
 ## References
 
-- [V4 VM Architecture](../README.md)
+- [V4 Engine Architecture](../README.md)
 - [SYS Instruction Specification](sys-opcodes.md)
 - [Error Codes](../include/v4/errors.def)

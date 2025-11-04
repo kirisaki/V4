@@ -1,4 +1,4 @@
-# V4 Virtual Machine
+# V4 Engine
 
 A lightweight Forth-compatible bytecode VM written in C++17.
 

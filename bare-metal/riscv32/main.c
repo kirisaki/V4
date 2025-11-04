@@ -33,7 +33,7 @@ static void print_int(int32_t n)
   }
 }
 
-/* V4 VM bytecode emission helpers */
+/* V4 Engine bytecode emission helpers */
 static void emit8(uint8_t* code, int* k, uint8_t byte)
 {
   code[(*k)++] = byte;
@@ -51,7 +51,7 @@ int main(void)
 {
   uart_puts("\r\n");
   uart_puts("==================================\r\n");
-  uart_puts(" V4 VM Bare-Metal Test - RISC-V\r\n");
+  uart_puts(" V4 Engine Bare-Metal Test - RISC-V\r\n");
   uart_puts("==================================\r\n\r\n");
 
   /* Phase 1: VM Creation */

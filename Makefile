@@ -71,10 +71,10 @@ size:
 	@echo "📊 Stripping and measuring binary sizes..."
 	@echo ""
 	@echo "=== Library ==="
-	@if [ -f build-release/libv4vm.a ]; then \
-		cp build-release/libv4vm.a build-release/libv4vm.stripped.a && \
-		strip --strip-debug build-release/libv4vm.stripped.a && \
-		ls -lh build-release/libv4vm.a build-release/libv4vm.stripped.a | awk '{print $$9 ": " $$5}'; \
+	@if [ -f build-release/libv4engine.a ]; then \
+		cp build-release/libv4engine.a build-release/libv4engine.stripped.a && \
+		strip --strip-debug build-release/libv4engine.stripped.a && \
+		ls -lh build-release/libv4engine.a build-release/libv4engine.stripped.a | awk '{print $$9 ": " $$5}'; \
 	fi
 	@echo ""
 	@echo "=== Test Executables (stripped) ==="
