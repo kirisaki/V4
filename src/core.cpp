@@ -164,7 +164,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
       /* -------- Stack manipulation -------- */
       case v4::Op::DUP:
       {
-        v4_i32 a;
+        v4_i32 a = 0;
         if (v4_err e = ds_peek(vm, 0, &a))
           return e;
         if (v4_err e = ds_push(vm, a))
@@ -196,7 +196,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
 
       case v4::Op::OVER:
       {
-        v4_i32 v;
+        v4_i32 v = 0;
         if (v4_err e = ds_peek(vm, 1, &v))
           return e;
         if (v4_err e = ds_push(vm, v))
@@ -707,7 +707,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
 
       case v4::Op::FROMR:
       {
-        v4_i32 val;
+        v4_i32 val = 0;
         if (v4_err e = rs_pop(vm, &val))
           return e;
         if (v4_err e = ds_push(vm, val))
@@ -717,7 +717,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
 
       case v4::Op::RFETCH:
       {
-        v4_i32 val;
+        v4_i32 val = 0;
         if (v4_err e = rs_peek(vm, 0, &val))
           return e;
         if (v4_err e = ds_push(vm, val))
@@ -818,7 +818,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
           return vm_panic(vm, V4_ERR(InvalidArg));  // No local frame
         if (vm->fp + idx >= vm->rp)
           return vm_panic(vm, V4_ERR(StackUnderflow));  // Out of bounds
-        v4_i32 val;
+        v4_i32 val = 0;
         if (v4_err e = ds_peek(vm, 0, &val))
           return e;
         vm->fp[idx] = val;

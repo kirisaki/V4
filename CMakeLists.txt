@@ -97,6 +97,7 @@ else()
     v4engine
     PRIVATE -Wall # Enable all warnings
             -Wextra # Enable extra warnings
+            -Werror # Treat warnings as errors
             -fno-exceptions
             -fno-rtti
             -ffunction-sections # Function sections for gc-sections
