@@ -939,17 +939,22 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
 
       case v4::Op::SYS:
       {
-        // Read 16-bit SYS ID (changed from 8-bit for V4-std compatibility)
-        if (ip + 2 > ip_end)
-          return vm_panic(vm, V4_ERR(TruncatedLiteral));
-        uint16_t sys_id = (uint16_t)ip[0] | ((uint16_t)ip[1] << 8);
-        ip += 2;
+        // Pop 16-bit SYS ID from stack (Forth-style: n SYS)
+        v4_i32 sys_id_i32;
+        v4_err err;
+        if ((err = ds_pop(vm, &sys_id_i32)))
+          return err;
+
+        // Validate SYS ID range (0-65535)
+        if (sys_id_i32 < 0 || sys_id_i32 > 0xFFFF)
+          return vm_panic(vm, V4_ERR(InvalidArg));
+
+        uint16_t sys_id = static_cast<uint16_t>(sys_id_i32);
 
 #ifdef V4_USE_V4STD
         // V4-std path: Use dynamic handler registry
         // Stack layout: ( arg0 arg1 arg2 -- result )
         v4_i32 arg2, arg1, arg0;
-        v4_err err;
 
         if ((err = ds_pop(vm, &arg2)))
           return err;
@@ -971,7 +976,6 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
           return vm_panic(vm, V4_ERR(UnknownOp));
 
         uint8_t sys_id_u8 = static_cast<uint8_t>(sys_id);
-        v4_err err = V4_ERR(OK);
 
         switch (sys_id_u8)
         {

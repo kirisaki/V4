@@ -17,8 +17,8 @@ enum class Op : std::uint8_t
 // -----------------------------------------------------------------------------
 enum class PrimKind : uint8_t
 {
-  NoImm,  // e.g., DUP, ADD, RET
-  Imm8,   // SYS id8
+  NoImm,  // e.g., DUP, ADD, RET, SYS
+  Imm8,   // (unused)
   Imm16,  // LIT_I16 imm16 (signed 16-bit immediate)
   Imm32,  // LIT imm32
   Rel16,  // JMP/JZ/JNZ off16 (signed, byte offset, next-PC based)

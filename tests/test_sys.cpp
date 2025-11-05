@@ -52,9 +52,10 @@ TEST_CASE("SYS GPIO_INIT")
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 1);
 
-  // SYS GPIO_INIT
+  // Push SYS ID and call SYS (Forth-style: 13 1 V4_SYS_GPIO_INIT SYS)
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_GPIO_INIT);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_GPIO_INIT);
 
   // RET
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
@@ -89,8 +90,9 @@ TEST_CASE("SYS GPIO_WRITE and GPIO_READ")
   emit32(code, &k, 10);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 1);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_GPIO_WRITE);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_GPIO_WRITE);
 
   // Drop error code
   emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
@@ -98,8 +100,9 @@ TEST_CASE("SYS GPIO_WRITE and GPIO_READ")
   // Read back: pin=10
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 10);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_GPIO_READ);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_GPIO_READ);
 
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
@@ -127,8 +130,9 @@ TEST_CASE("SYS UART_INIT and UART_PUTC")
   emit32(code, &k, 0);  // port
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 115200);  // baudrate
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_UART_INIT);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_UART_INIT);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));  // Drop error
 
   // Send 'A' (65)
@@ -136,8 +140,9 @@ TEST_CASE("SYS UART_INIT and UART_PUTC")
   emit32(code, &k, 0);  // port
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 65);  // char 'A'
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_UART_PUTC);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_UART_PUTC);
 
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
@@ -170,8 +175,9 @@ TEST_CASE("SYS UART_GETC")
   // Receive from UART0
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 0);  // port
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_UART_GETC);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_UART_GETC);
 
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
@@ -195,8 +201,9 @@ TEST_CASE("SYS MILLIS")
   v4_u8 code[16];
   int k = 0;
 
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_MILLIS);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_MILLIS);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
   v4_err err = vm_exec_raw(&vm, code, k);
@@ -217,8 +224,9 @@ TEST_CASE("SYS MICROS")
   v4_u8 code[16];
   int k = 0;
 
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_MICROS);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_MICROS);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
   v4_err err = vm_exec_raw(&vm, code, k);
@@ -247,12 +255,14 @@ TEST_CASE("SYS DELAY_MS")
   // Delay 500ms
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 500);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_DELAY_MS);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_DELAY_MS);
 
   // Get millis after delay
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_MILLIS);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_MILLIS);
 
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
@@ -278,12 +288,14 @@ TEST_CASE("SYS DELAY_US")
   // Delay 250us
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 250);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_DELAY_US);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_DELAY_US);
 
   // Get micros after delay (lower 32 bits)
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_MICROS);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_MICROS);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));  // Drop us_hi
 
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
@@ -306,8 +318,9 @@ TEST_CASE("SYS SYSTEM_INFO")
   v4_u8 code[16];
   int k = 0;
 
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_SYSTEM_INFO);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_SYSTEM_INFO);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
   v4_err err = vm_exec_raw(&vm, code, k);
@@ -335,8 +348,9 @@ TEST_CASE("SYS error handling - invalid pin")
   emit32(code, &k, 999);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 1);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_GPIO_INIT);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_GPIO_INIT);
 
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
@@ -362,8 +376,9 @@ TEST_CASE("SYS EMIT")
   // Emit 'A' (65)
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 65);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_EMIT);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_EMIT);
 
   // Drop error code
   emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
@@ -371,8 +386,9 @@ TEST_CASE("SYS EMIT")
   // Emit 'B' (66)
   emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
   emit32(code, &k, 66);
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_EMIT);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_EMIT);
 
   // Drop error code
   emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
@@ -404,15 +420,17 @@ TEST_CASE("SYS KEY")
   int k = 0;
 
   // Read first character
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_KEY);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_KEY);
 
   // Drop error code
   emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
 
   // Read second character
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_KEY);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_KEY);
 
   // Drop error code
   emit8(code, &k, static_cast<v4_u8>(v4::Op::DROP));
@@ -441,8 +459,9 @@ TEST_CASE("SYS KEY - no data available")
   int k = 0;
 
   // Try to read character
+  emit8(code, &k, static_cast<v4_u8>(v4::Op::LIT));
+  emit32(code, &k, V4_SYS_KEY);
   emit8(code, &k, static_cast<v4_u8>(v4::Op::SYS));
-  emit16(code, &k, V4_SYS_KEY);
 
   emit8(code, &k, static_cast<v4_u8>(v4::Op::RET));
 
