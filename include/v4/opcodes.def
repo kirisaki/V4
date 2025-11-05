@@ -49,7 +49,7 @@ OP(SELECT   , 0x43, NO_IMM)  // flag b a SELECT → flag ? a : b
 OP(CALL     , 0x50, IDX16)
 OP(RET      , 0x51, NO_IMM)
 // === System / hostcall (0x60-0x6F) ===
-OP(SYS      , 0x60, IMM8)
+OP(SYS      , 0x60, IMM16)
 // === Return stack (0x70-0x7F) ===
 OP(TOR      , 0x70, NO_IMM)
 OP(FROMR    , 0x71, NO_IMM)

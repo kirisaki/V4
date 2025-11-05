@@ -17,6 +17,7 @@ option(V4_BUILD_TESTS "Build unit tests" ON)
 option(V4_BUILD_TOOLS "Build command-line tools" ON)
 option(V4_ENABLE_MOCK_HAL "Build with mock HAL (required for tests)" ON)
 option(V4_USE_V4HAL "Use V4-hal C++17 CRTP implementation" OFF)
+option(V4_USE_V4STD "Use V4-std device-independent standard library" OFF)
 option(V4_OPTIMIZE_SIZE "Optimize for size (-Os)" ON)
 option(
   V4_ENABLE_LTO
@@ -33,6 +34,11 @@ set_property(CACHE V4_TASK_BACKEND PROPERTY STRINGS "CUSTOM" "FREERTOS")
 set(V4HAL_LOCAL_PATH
     "${CMAKE_CURRENT_SOURCE_DIR}/../V4-hal"
     CACHE PATH "Path to local V4-hal source")
+
+# V4-std path configuration
+set(V4STD_LOCAL_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/../V4-std"
+    CACHE PATH "Path to local V4-std source")
 
 # FreeRTOS path configuration (only needed when V4_TASK_BACKEND=FREERTOS)
 set(FREERTOS_PATH
@@ -179,6 +185,32 @@ if(V4_USE_V4HAL)
 endif()
 
 # ============================================================================
+# V4-std Integration (Device-Independent Standard Library)
+# ============================================================================
+
+if(V4_USE_V4STD)
+  include(FetchContent)
+
+  if(EXISTS "${V4STD_LOCAL_PATH}/CMakeLists.txt")
+    message(STATUS "Using local V4-std from: ${V4STD_LOCAL_PATH}")
+    add_subdirectory(${V4STD_LOCAL_PATH} ${CMAKE_BINARY_DIR}/v4std)
+  else()
+    message(STATUS "Fetching V4-std from repository")
+    fetchcontent_declare(
+      v4std
+      GIT_REPOSITORY https://github.com/V4-project/V4-std.git
+      GIT_TAG main)
+    fetchcontent_makeavailable(v4std)
+  endif()
+
+  # Link V4-std to v4engine
+  target_link_libraries(v4engine PUBLIC v4std)
+  target_compile_definitions(v4engine PUBLIC V4_USE_V4STD)
+
+  message(STATUS "V4-std device-independent standard library enabled")
+endif()
+
+# ============================================================================
 # Tools
 # ============================================================================
 
@@ -271,5 +303,6 @@ message(STATUS "  Build tests:          ${V4_BUILD_TESTS}")
 message(STATUS "  Build tools:          ${V4_BUILD_TOOLS}")
 message(STATUS "  Enable mock HAL:      ${V4_ENABLE_MOCK_HAL}")
 message(STATUS "  Use V4-hal (C++17):   ${V4_USE_V4HAL}")
+message(STATUS "  Use V4-std:           ${V4_USE_V4STD}")
 message(STATUS "  Optimize for size:    ${V4_OPTIMIZE_SIZE}")
 message(STATUS "")

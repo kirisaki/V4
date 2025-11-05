@@ -14,6 +14,11 @@
 #include "v4/task.h"
 #include "v4/vm_api.h"
 
+// V4-std integration (optional - only if V4_USE_V4STD is defined)
+#ifdef V4_USE_V4STD
+#include "v4std/sys_handlers.hpp"
+#endif
+
 /* ========================================================================= */
 /* UART Handle Management                                                    */
 /* ========================================================================= */
@@ -934,14 +939,41 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
 
       case v4::Op::SYS:
       {
-        // Read SYS ID
-        if (ip >= ip_end)
+        // Read 16-bit SYS ID (changed from 8-bit for V4-std compatibility)
+        if (ip + 2 > ip_end)
           return vm_panic(vm, V4_ERR(TruncatedLiteral));
-        uint8_t sys_id = *ip++;
+        uint16_t sys_id = (uint16_t)ip[0] | ((uint16_t)ip[1] << 8);
+        ip += 2;
 
+#ifdef V4_USE_V4STD
+        // V4-std path: Use dynamic handler registry
+        // Stack layout: ( arg0 arg1 arg2 -- result )
+        v4_i32 arg2, arg1, arg0;
+        v4_err err;
+
+        if ((err = ds_pop(vm, &arg2)))
+          return err;
+        if ((err = ds_pop(vm, &arg1)))
+          return err;
+        if ((err = ds_pop(vm, &arg0)))
+          return err;
+
+        // Invoke V4-std handler
+        int32_t result = v4std::invoke_sys_handler(sys_id, arg0, arg1, arg2);
+
+        if ((err = ds_push(vm, result)))
+          return err;
+        break;
+#else
+        // V4-hal path: Use legacy 8-bit syscalls (backward compatibility)
+        // NOTE: Only supports sys_id 0-255 (legacy range)
+        if (sys_id > 0xFF)
+          return vm_panic(vm, V4_ERR(UnknownOp));
+
+        uint8_t sys_id_u8 = static_cast<uint8_t>(sys_id);
         v4_err err = V4_ERR(OK);
 
-        switch (sys_id)
+        switch (sys_id_u8)
         {
           /* GPIO operations */
           case V4_SYS_GPIO_INIT:  // (pin mode -- err)
@@ -1183,6 +1215,7 @@ extern "C" v4_err vm_exec_raw(Vm* vm, const v4_u8* bc, int len)
             return vm_panic(vm, V4_ERR(UnknownOp));
         }
         break;
+#endif  // V4_USE_V4STD
       }
 
       case v4::Op::RET:
