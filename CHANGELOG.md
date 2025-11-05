@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.13.0] - 2025-11-05
 
 ### Added
+- **V4-std integration** for dynamic SYS instruction handling
+  - Platform-specific SYS handlers can be registered at runtime
+  - V4-std provides system call routing infrastructure
+  - See [V4-std](https://github.com/V4-project/V4-std) for implementation
 - **Word accessor APIs** for safe access to Word structure
   - `vm_word_get_name()` - Get word name string
   - `vm_word_get_code()` - Get bytecode pointer
@@ -20,15 +24,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `V4PanicHandler` function pointer type
   - Enhanced `V4PanicInfo` with `stack[4]` array for top stack values
   - Test coverage for custom panic handlers
+  - Documentation in README with usage examples
 - **Type definitions and constants**
   - `v4_u16` typedef for 16-bit unsigned integers
   - `V4_OK` constant for success return value
 
 ### Changed
+- **SYS instruction format upgraded to IMM16**
+  - SYS now uses 16-bit immediate operand (was 8-bit)
+  - Supports 65536 system calls (was 256)
+  - SYSX opcode removed (no longer needed)
+  - All tests updated to use `emit16()` for SYS operands
 - **Stricter compiler warnings**
   - Added `-Werror` flag to treat warnings as errors
   - Initialize all local variables to avoid `-Wmaybe-uninitialized` warnings
   - Fixed 5 uninitialized variable cases in `core.cpp`
+
+### Removed
+- **SYSX opcode** - Consolidated into SYS with IMM16
 
 ## [0.12.0] - 2025-01-05
 
