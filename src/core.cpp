@@ -1395,6 +1395,27 @@ extern "C" Word* vm_get_word(Vm* vm, int idx)
   return &vm->words[idx];
 }
 
+extern "C" const char* vm_word_get_name(const Word* word)
+{
+  if (!word)
+    return nullptr;
+  return word->name;
+}
+
+extern "C" const v4_u8* vm_word_get_code(const Word* word)
+{
+  if (!word)
+    return nullptr;
+  return word->code;
+}
+
+extern "C" v4_u16 vm_word_get_code_len(const Word* word)
+{
+  if (!word)
+    return 0;
+  return word->code_len;
+}
+
 extern "C" int vm_find_word(Vm* vm, const char* name)
 {
   if (!vm || !name)

@@ -17,6 +17,8 @@ extern "C"
   typedef int32_t v4_i32;
   /** 32-bit unsigned integer used internally by the VM. */
   typedef uint32_t v4_u32;
+  /** 16-bit unsigned integer. */
+  typedef uint16_t v4_u16;
   /** 8-bit unsigned integer used for bytecode and memory. */
   typedef uint8_t v4_u8;
   /** Error code type. 0 = OK, negative = error. */
@@ -162,6 +164,27 @@ extern "C"
    * @return Pointer to Word structure, or NULL if index is invalid.
    */
   struct Word *vm_get_word(struct Vm *vm, int idx);
+
+  /**
+   * @brief Get word name.
+   * @param word  Word pointer (from vm_get_word).
+   * @return Word name string, or NULL if word is NULL.
+   */
+  const char *vm_word_get_name(const struct Word *word);
+
+  /**
+   * @brief Get word bytecode pointer.
+   * @param word  Word pointer (from vm_get_word).
+   * @return Pointer to bytecode, or NULL if word is NULL.
+   */
+  const v4_u8 *vm_word_get_code(const struct Word *word);
+
+  /**
+   * @brief Get word bytecode length.
+   * @param word  Word pointer (from vm_get_word).
+   * @return Bytecode length in bytes, or 0 if word is NULL.
+   */
+  v4_u16 vm_word_get_code_len(const struct Word *word);
 
   /**
    * @brief Find a word by name in the VM's dictionary.
