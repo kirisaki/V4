@@ -5,7 +5,23 @@
 #include "v4/errors.hpp"
 #include "v4/internal/vm.h"
 #include "v4/opcodes.hpp"
+#include "v4/panic.h"
 #include "v4/vm_api.h"
+
+// Test helper: custom panic handler
+static bool g_panic_called = false;
+static V4PanicInfo g_panic_info = {};
+static void *g_panic_user_data = nullptr;
+
+static void test_panic_handler(void *user_data, const V4PanicInfo *info)
+{
+  g_panic_called = true;
+  g_panic_user_data = user_data;
+  if (info)
+  {
+    g_panic_info = *info;
+  }
+}
 
 TEST_CASE("Panic handler: Empty stack")
 {
@@ -89,4 +105,79 @@ TEST_CASE("Panic handler: Stack underflow detection")
 
   CHECK(err == static_cast<v4_err>(Err::StackUnderflow));
   // vm_ds_pop should have called vm_panic internally
+}
+
+TEST_CASE("Custom panic handler: Basic callback")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Reset test state
+  g_panic_called = false;
+  g_panic_user_data = nullptr;
+
+  // Register custom handler
+  int user_value = 42;
+  vm_set_panic_handler(&vm, test_panic_handler, &user_value);
+
+  // Push some data and trigger panic
+  vm_ds_push(&vm, 100);
+  vm_ds_push(&vm, 200);
+
+  v4_err err = vm_panic(&vm, static_cast<v4_err>(Err::InvalidArg));
+
+  // Verify callback was invoked
+  CHECK(g_panic_called == true);
+  CHECK(g_panic_user_data == &user_value);
+  CHECK(g_panic_info.error_code == static_cast<int32_t>(Err::InvalidArg));
+  CHECK(g_panic_info.ds_depth == 2);
+  CHECK(g_panic_info.has_stack_data == true);
+  CHECK(g_panic_info.tos == 200);
+  CHECK(g_panic_info.nos == 100);
+}
+
+TEST_CASE("Custom panic handler: Stack array population")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Reset test state
+  g_panic_called = false;
+
+  // Register custom handler
+  vm_set_panic_handler(&vm, test_panic_handler, nullptr);
+
+  // Push 4 values
+  vm_ds_push(&vm, 10);
+  vm_ds_push(&vm, 20);
+  vm_ds_push(&vm, 30);
+  vm_ds_push(&vm, 40);
+
+  v4_err err = vm_panic(&vm, static_cast<v4_err>(Err::OobMemory));
+
+  // Verify stack array contains top 4 values
+  CHECK(g_panic_called == true);
+  CHECK(g_panic_info.ds_depth == 4);
+  CHECK(g_panic_info.stack[0] == 40);  // TOS
+  CHECK(g_panic_info.stack[1] == 30);
+  CHECK(g_panic_info.stack[2] == 20);
+  CHECK(g_panic_info.stack[3] == 10);
+}
+
+TEST_CASE("Custom panic handler: NULL handler")
+{
+  Vm vm{};
+  vm_reset(&vm);
+
+  // Set and then clear handler
+  vm_set_panic_handler(&vm, test_panic_handler, nullptr);
+  vm_set_panic_handler(&vm, nullptr, nullptr);
+
+  g_panic_called = false;
+
+  // Trigger panic - should not crash
+  v4_err err = vm_panic(&vm, static_cast<v4_err>(Err::InvalidArg));
+
+  CHECK(err == static_cast<v4_err>(Err::InvalidArg));
+  CHECK(g_panic_called == false);  // Handler was cleared
 }

@@ -63,6 +63,10 @@ extern "C"
     /* Task system (always enabled) */
     v4_scheduler_t scheduler; /**< Task scheduler */
     v4_msg_queue_t msg_queue; /**< Message queue */
+
+    /* Panic handler */
+    void (*panic_handler)(void *, const struct V4PanicInfo *); /**< Custom panic handler */
+    void *panic_user_data; /**< User data for panic handler */
   } Vm;
 
   /* Internal-only helper to execute raw bytecode for early bring-up/tests. */

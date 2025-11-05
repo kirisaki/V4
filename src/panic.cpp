@@ -4,11 +4,21 @@
 #include <stdio.h>
 
 #include "v4/errors.hpp"
+#include "v4/internal/vm.h"  // For Vm struct definition
 #include "v4/panic.hpp"
 #include "v4/vm_api.h"
 
 extern "C"
 {
+  void vm_set_panic_handler(struct Vm *vm, V4PanicHandler handler, void *user_data)
+  {
+    if (!vm)
+      return;
+
+    vm->panic_handler = handler;
+    vm->panic_user_data = user_data;
+  }
+
   v4_err vm_panic(struct Vm *vm, v4_err error_code)
   {
     using namespace v4;
@@ -32,6 +42,12 @@ extern "C"
       {
         info.nos = vm_ds_peek_public(vm, 1);
       }
+    }
+
+    // Get top 4 stack values for custom handlers
+    for (int i = 0; i < 4 && i < info.ds_depth; ++i)
+    {
+      info.stack[i] = vm_ds_peek_public(vm, i);
     }
 
     // Output diagnostic information
@@ -80,6 +96,12 @@ extern "C"
 
     printf("==============================\n");
     printf("\n");
+
+    // Call custom panic handler if registered
+    if (vm->panic_handler)
+    {
+      vm->panic_handler(vm->panic_user_data, &info);
+    }
 
     return error_code;
   }

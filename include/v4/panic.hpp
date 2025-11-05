@@ -1,49 +1,37 @@
-#pragma once
-#include <cstdint>
+/**
+ * @file panic.hpp
+ * @brief V4 VM panic handler C++ wrapper
+ *
+ * SPDX-License-Identifier: MIT OR Apache-2.0
+ */
 
-#include "v4/errors.hpp"
+#pragma once
+
 #include "v4/panic.h"
 
 namespace v4
 {
 
 /**
- * @brief VM panic diagnostic information (C++ wrapper)
- *
- * C++ wrapper class for V4PanicInfo to make it easier to use in C++.
+ * @brief C++ wrapper for V4PanicInfo
  */
-struct PanicInfo
+using PanicInfo = V4PanicInfo;
+
+/**
+ * @brief C++ wrapper for V4PanicHandler
+ */
+using PanicHandler = V4PanicHandler;
+
+/**
+ * @brief Set panic handler (C++ wrapper)
+ *
+ * @param vm         VM instance
+ * @param handler    Panic handler callback
+ * @param user_data  User data passed to handler
+ */
+inline void set_panic_handler(Vm *vm, PanicHandler handler, void *user_data = nullptr)
 {
-  Err error;           /**< Error code (Err enumeration) */
-  uint32_t pc;         /**< Program Counter */
-  int32_t tos;         /**< Top of Stack (when valid) */
-  int32_t nos;         /**< Next on Stack (when valid) */
-  uint8_t ds_depth;    /**< Data Stack depth */
-  uint8_t rs_depth;    /**< Return Stack depth */
-  bool has_stack_data; /**< Whether stack data is valid */
-
-  /**
-   * @brief Convert from C API structure
-   */
-  static PanicInfo from_c(const V4PanicInfo& c_info)
-  {
-    return PanicInfo{static_cast<Err>(c_info.error_code),
-                     c_info.pc,
-                     c_info.tos,
-                     c_info.nos,
-                     c_info.ds_depth,
-                     c_info.rs_depth,
-                     c_info.has_stack_data};
-  }
-
-  /**
-   * @brief Convert to C API structure
-   */
-  V4PanicInfo to_c() const
-  {
-    return V4PanicInfo{
-        static_cast<int32_t>(error), pc, tos, nos, ds_depth, rs_depth, has_stack_data};
-  }
-};
+  vm_set_panic_handler(vm, handler, user_data);
+}
 
 }  // namespace v4
