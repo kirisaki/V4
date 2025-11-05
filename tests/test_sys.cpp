@@ -20,6 +20,12 @@ static void emit8(v4_u8* code, int* k, v4_u8 byte)
   code[(*k)++] = byte;
 }
 
+static void emit16(v4_u8* code, int* k, v4_u16 val)
+{
+  code[(*k)++] = (val >> 0) & 0xFF;
+  code[(*k)++] = (val >> 8) & 0xFF;
+}
+
 static void emit32(v4_u8* code, int* k, v4_u32 val)
 {
   code[(*k)++] = (val >> 0) & 0xFF;
