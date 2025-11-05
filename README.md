@@ -10,6 +10,10 @@ A lightweight Forth-compatible bytecode VM written in C++17.
   - Inter-task message passing with 16-message queue
   - Task sleep, yield, and critical sections
   - Platform-abstracted timer interrupts
+- **Panic Handler** (v0.12.0+)
+  - Comprehensive error diagnostics with `vm_panic()`
+  - Stack trace and register dump
+  - Custom panic handler support for embedded systems
 - Memory-mapped I/O support
 - Little-endian byte ordering
 - No exceptions, no RTTI
@@ -95,6 +99,50 @@ vm_task_receive(vm, msg_type, &data, &src_task);
 - `TASK_SELF`, `TASK_COUNT`
 
 See [v4/task.h](include/v4/task.h) for full API documentation.
+
+## Panic Handler
+
+V4 includes a comprehensive panic handler for debugging errors in production:
+
+### Features
+- **Automatic diagnostics**: Collects PC, stack depths, top stack values
+- **Stack trace**: Full return stack dump for call trace analysis
+- **Custom handlers**: Register application-specific panic handlers
+- **Embedded-friendly**: No dynamic allocation, minimal overhead
+
+### API Example
+```c
+#include "v4/panic.h"
+
+// Optional: Register custom panic handler
+void my_panic_handler(void* user_data, const V4PanicInfo* info) {
+    // Log to external storage, blink LED, etc.
+    printf("Custom handler: Error %d at PC=0x%08X\n",
+           info->error_code, info->pc);
+}
+
+vm_set_panic_handler(vm, my_panic_handler, NULL);
+
+// Panic is called automatically on errors
+// Or call manually for custom error conditions
+vm_panic(vm, V4_ERR_CUSTOM);
+```
+
+### Output Example
+```
+========== V4 PANIC ==========
+Error: StackOverflow (code=-3)
+PC: 0x00001234
+Data Stack: [256] TOS=42, NOS=100
+Return Stack: [3]
+Call trace:
+  [0] 0x00001200
+  [1] 0x00001180
+  [2] 0x00001100
+==============================
+```
+
+See [include/v4/panic.h](include/v4/panic.h) and [tests/test_panic.cpp](tests/test_panic.cpp) for details.
 
 ## Testing
 
