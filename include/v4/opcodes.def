@@ -72,8 +72,6 @@ OP(LSET1    , 0x7F, NO_IMM)
 // === Local inc/dec (0x80-0x81) ===
 OP(LINC     , 0x80, IMM8)    // local[n]++
 OP(LDEC     , 0x81, IMM8)    // local[n]--
-// === Reserved / future ===
-OP(SYSX     , 0x8F, IMM8)    // hostcall extension
 // === Task management (0x90-0x9F) ===
 OP(TASK_SPAWN           , 0x90, NO_IMM)  // ( word_idx priority ds_size rs_size -- task_id )
 OP(TASK_EXIT            , 0x91, NO_IMM)  // ( -- ) [does not return]
