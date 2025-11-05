@@ -24,6 +24,9 @@ extern "C"
   /** Error code type. 0 = OK, negative = error. */
   typedef int v4_err;
 
+  /** Success return value. */
+#define V4_OK 0
+
   /* ------------------------------------------------------------------------- */
   /* MMIO (Memory-Mapped I/O)                                                  */
   /* ------------------------------------------------------------------------- */

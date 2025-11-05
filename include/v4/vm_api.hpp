@@ -17,7 +17,7 @@ namespace v4
  */
 class Word
 {
-public:
+ public:
   /**
    * @brief Get word name
    * @param word  Opaque Word pointer

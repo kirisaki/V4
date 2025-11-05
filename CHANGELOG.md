@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Word accessor APIs** for safe access to Word structure
+  - `vm_word_get_name()` - Get word name string
+  - `vm_word_get_code()` - Get bytecode pointer
+  - `vm_word_get_code_len()` - Get bytecode length
+  - C++ wrapper class `v4::Word` in `vm_api.hpp`
+- **Custom panic handler support** for platform-specific error handling
+  - `vm_set_panic_handler()` - Register custom panic callback
+  - `V4PanicHandler` function pointer type
+  - Enhanced `V4PanicInfo` with `stack[4]` array for top stack values
+  - Test coverage for custom panic handlers
+- **Type definitions and constants**
+  - `v4_u16` typedef for 16-bit unsigned integers
+  - `V4_OK` constant for success return value
+
+### Changed
+- **Stricter compiler warnings**
+  - Added `-Werror` flag to treat warnings as errors
+  - Initialize all local variables to avoid `-Wmaybe-uninitialized` warnings
+  - Fixed 5 uninitialized variable cases in `core.cpp`
+
 ## [0.12.0] - 2025-01-05
 
 ### Added
