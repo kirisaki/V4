@@ -1458,7 +1458,8 @@ extern "C" int vm_find_word(Vm* vm, const char* name)
   if (!vm || !name)
     return -1;
 
-  for (int i = 0; i < vm->word_count; i++)
+  // Search backward to find newest definition (Forth shadowing)
+  for (int i = vm->word_count - 1; i >= 0; i--)
   {
     if (vm->words[i].name && strcmp(vm->words[i].name, name) == 0)
     {
