@@ -130,8 +130,8 @@ TEST_CASE("Word shadowing: Newer definition shadows older")
   VmFixture vm;
 
   uint8_t code1[6], code2[6];
-  make_lit_ret_bytecode(code1, 10);   // First definition: returns 10
-  make_lit_ret_bytecode(code2, 20);   // Second definition: returns 20
+  make_lit_ret_bytecode(code1, 10);  // First definition: returns 10
+  make_lit_ret_bytecode(code2, 20);  // Second definition: returns 20
 
   const int idx1 = vm_register_word(vm.ptr(), "FOO", code1, 6);
   const int idx2 = vm_register_word(vm.ptr(), "FOO", code2, 6);
@@ -180,10 +180,8 @@ TEST_CASE("Word shadowing: Execution uses newest definition")
 
   // Create main bytecode that calls VALUE
   uint8_t main_code1[] = {
-      static_cast<uint8_t>(v4::Op::CALL),
-      static_cast<uint8_t>(idx1 & 0xFF),
-      static_cast<uint8_t>((idx1 >> 8) & 0xFF),
-      static_cast<uint8_t>(v4::Op::RET)};
+      static_cast<uint8_t>(v4::Op::CALL), static_cast<uint8_t>(idx1 & 0xFF),
+      static_cast<uint8_t>((idx1 >> 8) & 0xFF), static_cast<uint8_t>(v4::Op::RET)};
 
   // Execute: should push 100
   const int rc1 = vm_exec_raw(vm.ptr(), main_code1, sizeof(main_code1));
@@ -201,10 +199,8 @@ TEST_CASE("Word shadowing: Execution uses newest definition")
 
   // Create main bytecode that calls newest VALUE
   uint8_t main_code2[] = {
-      static_cast<uint8_t>(v4::Op::CALL),
-      static_cast<uint8_t>(idx2 & 0xFF),
-      static_cast<uint8_t>((idx2 >> 8) & 0xFF),
-      static_cast<uint8_t>(v4::Op::RET)};
+      static_cast<uint8_t>(v4::Op::CALL), static_cast<uint8_t>(idx2 & 0xFF),
+      static_cast<uint8_t>((idx2 >> 8) & 0xFF), static_cast<uint8_t>(v4::Op::RET)};
 
   // Execute: should push 200 (from new definition)
   const int rc2 = vm_exec_raw(vm.ptr(), main_code2, sizeof(main_code2));
