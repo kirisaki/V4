@@ -242,6 +242,7 @@ if(V4_BUILD_TESTS)
     add_v4_test(test_vm tests/test_vm.cpp)
     add_v4_test(test_return_stack tests/test_return_stack.cpp)
     add_v4_test(test_call tests/test_call.cpp)
+    add_v4_test(test_word_shadowing tests/test_word_shadowing.cpp)
 
     # Memory Tests
     add_v4_test(test_memory tests/test_memory.cpp)
